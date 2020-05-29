@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-
+#include <allegro5/allegro.h>
 #include "eventHandling.h"
 
 enum implEvent : eventTypes { EventA, EventB, EventC, EventD, EventQuit };
@@ -41,11 +41,12 @@ class simpleEventGenerator : public eventGenerator
 
 	public:
 	simpleEventGenerator();
+	~simpleEventGenerator();
 	genericEvent * getEvent(void);
 	
 	private:
 
-	unsigned int pos;
-	eventTypes evento;
-	
+	ALLEGRO_EVENT_QUEUE* alEventQueue;
+	ALLEGRO_DISPLAY* display;
 };
+
