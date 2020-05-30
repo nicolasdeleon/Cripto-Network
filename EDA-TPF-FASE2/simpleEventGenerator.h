@@ -1,32 +1,23 @@
 #pragma once
-#include <array>
+
+#include <queue>
 #include <allegro5/allegro.h>
 #include "eventHandling.h"
 
-enum implEvent : eventTypes { EventA, EventB, EventC, EventD, EventQuit };
+using namespace std;
 
-class cEventA : public genericEvent
+enum implEvent : eventTypes { EventDraw, EventCreateNodeScreen, EventBack, EventCreateNode, EventQuit};
+
+class cEventDraw : public genericEvent
 {
 public:
-	eventTypes getType(void) { return EventA; }
+	eventTypes getType(void) { return EventDraw; }
 };
 
-class cEventB : public genericEvent
+class cEventCreateNodeScreen : public genericEvent
 {
 public:
-	eventTypes getType(void) { return EventB; }
-};
-
-class cEventC : public genericEvent
-{
-public:
-	eventTypes getType(void) { return EventC; }
-};
-
-class cEventD : public genericEvent
-{
-public:
-	eventTypes getType(void) { return EventD; }
+	eventTypes getType(void) { return EventCreateNodeScreen; }
 };
 
 class cEventQuit : public genericEvent
@@ -35,18 +26,42 @@ public:
 	eventTypes getType(void) { return EventQuit; }
 };
 
+class cEventBack : public genericEvent
+{
+public:
+	eventTypes getType(void) { return EventBack; }
+};
 
-class simpleEventGenerator : public eventGenerator
+class cEventCreateNode : public genericEvent
+{
+public:
+	cEventCreateNode(const char* aliasName, const char* ipAdress, const char* clientPort) :
+		alias(aliasName), ip(ipAdress), port(clientPort) {};
+	eventTypes getType(void) { return EventCreateNode; }
+	const char* alias, *ip, *port;
+};
+
+
+class interfaseEventGenerator : public eventGenerator
 {
 
 	public:
-	simpleEventGenerator();
-	~simpleEventGenerator();
+	interfaseEventGenerator();
+	~interfaseEventGenerator();
 	genericEvent * getEvent(void);
+	void printMainMenu(void);
+	void printMakingNode(void);
+	void printManageConnections(void);
+	
 	
 	private:
 
+	
+	queue <genericEvent*> guiEvents;
 	ALLEGRO_EVENT_QUEUE* alEventQueue;
+
 	ALLEGRO_DISPLAY* display;
+
+	bool imguiInit();
 };
 
