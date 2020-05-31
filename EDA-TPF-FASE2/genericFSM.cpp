@@ -20,6 +20,8 @@ cycle(genericEvent * ev)
 		
 		f();
 		state = temp.nextState;
+
+
 	}
 	
 	return;

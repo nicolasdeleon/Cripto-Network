@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\ImguiSource">
+      <UniqueIdentifier>{2ba45bcd-9799-4053-983d-e4b2a6f53593}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\NewFilter1">
+      <UniqueIdentifier>{882ed9fd-474d-4cfd-b310-de1a8e778a09}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -30,6 +36,21 @@
     <ClCompile Include="MyServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Imgui_files\imgui.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_demo.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_draw.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_impl_allegro5.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_widgets.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="simpleEventGenerator.h">
@@ -42,6 +63,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MyServer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imgui.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imgui_impl_allegro5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imgui_internal.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imstb_rectpack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imstb_textedit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imstb_truetype.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
