@@ -159,6 +159,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MyServer.cpp" />
     <ClCompile Include="simpleEventGenerator.cpp" />
+    <ClCompile Include="Simulation.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="eventHandling.h" />
@@ -172,6 +173,7 @@
     <ClInclude Include="Imgui_files\imstb_truetype.h" />
     <ClInclude Include="MyServer.h" />
     <ClInclude Include="simpleEventGenerator.h" />
+    <ClInclude Include="Simulation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

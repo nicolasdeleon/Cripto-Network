@@ -2,6 +2,7 @@
 #include "eventHandling.h"
 #include "genericFSM.h"
 #include "simpleEventGenerator.h"
+#include "Simulation.h"
 
 enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, dummyState};
 
@@ -58,6 +59,7 @@ class FSMImplementation : public genericFSM
 
 int main(int argc, char** argv) 
 {
+	Simulation sim;
 	FSMImplementation fsm;
 	interfaseEventGenerator guiEvGen;	//generador de UN tipo de eventos
 	mainEventGenerator eventGen;	//generador de eventos de TODO el programa
@@ -65,14 +67,22 @@ int main(int argc, char** argv)
 	//netwEventGenerator netwEvGen;
 	fsm.referenceGuiEvGen(&guiEvGen);
 	eventGen.attach(&guiEvGen);	//registro fuente de eventos
-	
+	/* Esto serian configuraciones cuando se cargan todos los nodos */
+	sim.addNode(8080);
+	sim.addNode(80);
+	// terminar las configs con un startNodes()
+	sim.startNodes();
+	/* Esto serian configuraciones pre iniciar el programa */
+
 	bool quit = false;
 	do
 	{
+
 		genericEvent * ev;
 		ev = eventGen.getNextEvent();
 		if (ev != nullptr) 
 		{
+			sim.doNodePolls();
 			if (ev->getType() == EventQuit)
 			{
 				quit = true;

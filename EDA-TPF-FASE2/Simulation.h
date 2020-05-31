@@ -15,7 +15,7 @@ class GenericNode {
 public:
 	GenericNode(boost::asio::io_context& io_context, unsigned int port = 80);
 	~GenericNode();
-	void startNode();
+	void start();
 	std::map<unsigned int, boost::asio::ip::tcp::socket*> getConnections();
 	unsigned int getPort();
 	boost::asio::io_context& getNodeIoContext();

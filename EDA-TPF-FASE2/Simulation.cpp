@@ -59,7 +59,7 @@ void GenericNode::shutdown_open_sockets() {
 }
 
 
-void GenericNode::startNode() {
+void GenericNode::start() {
 	// apago y cierro el socket recien creado, REDUNDANTE, esto se podria sacar pero me tiro error si lo saco
 	// es el estado inicial de cada nodo
 	shutdown_open_sockets();
@@ -304,7 +304,7 @@ void Simulation::addNode(unsigned int port) {
 void Simulation::startNodes() {
 	for (GenericNode* node : Nodes) {
 		// Itero por todos mis nodos y hago cosas tipo start()
-		node->startNode();
+		node->start();
 	}
 }
 
