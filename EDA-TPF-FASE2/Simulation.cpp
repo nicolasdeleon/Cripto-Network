@@ -4,11 +4,18 @@ using namespace std::placeholders;
 
 using boost::asio::ip::tcp;
 
+string GenericNode::createAddress(string ip, int port) {
+	string address = ip + ":" + to_string(port);
+	return address;
+}
 
-GenericNode::GenericNode(boost::asio::io_context& io_context, unsigned int port)
+
+GenericNode::GenericNode(boost::asio::io_context& io_context, string ip , unsigned int port)
 	: context_(io_context),
 	acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
 	port(port),
+	ip(ip),
+	address(createAddress(ip, port)),
 	handler_socket(nullptr),
 	request(REQUEST_BUFFER_LENGTH),
 	permitedPaths(AMOUNT_OF_PATHS)
@@ -24,17 +31,37 @@ GenericNode::~GenericNode()
 	// deberia destruir el mapa de sockets, de todas formas es probable que ya este destruido porque destruyo cada socket cada vez q cierro la conexion
 }
 
-std::map<unsigned int, boost::asio::ip::tcp::socket*> 
+std::map<string, boost::asio::ip::tcp::socket*> 
 GenericNode::getConnections() {
 	return connections;
+}
+
+void GenericNode::addConnection(string destiny_address) {
+	connections.insert(std::pair<string, boost::asio::ip::tcp::socket*>(destiny_address, nullptr));
+}
+
+bool GenericNode::deleteConnection(string destiny_address) {
+	if (connections[destiny_address] != nullptr)
+		delete(connections[destiny_address]);
+	bool res = connections.erase(destiny_address);
+	return res;
 }
 
 unsigned int GenericNode::getPort() {
 	return port;
 }
 
+string GenericNode::getIP() {
+	return ip;
+}
+
+string GenericNode::getAddress() {
+	return address;
+}
+
 void GenericNode::setPort(unsigned int PORT) {
 	acceptor_ = boost::asio::ip::tcp::acceptor(context_, tcp::endpoint(tcp::v4(), PORT));
+	port = PORT;
 }
 
 boost::asio::io_context& GenericNode::getNodeIoContext() {
@@ -43,7 +70,7 @@ boost::asio::io_context& GenericNode::getNodeIoContext() {
 
 void GenericNode::shutdown_open_sockets() {
 
-	std::map<unsigned int, boost::asio::ip::tcp::socket*>::iterator iterator = connections.begin();
+	std::map<string, boost::asio::ip::tcp::socket*>::iterator iterator = connections.begin();
 	while (iterator != connections.end())
 	{
 		// Accessing KEY from element pointed by it.
@@ -86,27 +113,29 @@ void GenericNode::shut_down_reciever_socket() {
 	delete(handler_socket);
 }
 
-void GenericNode::shutdown_socket_for_connection(unsigned int port) {
-	(*(connections[port])).shutdown(boost::asio::ip::tcp::socket::shutdown_both);
-	(*(connections[port])).close();
-	delete(connections[port]);
-	connections[port] = nullptr;
+void GenericNode::shutdown_socket_for_connection(string incoming_address) {
+	(*(connections[incoming_address])).shutdown(boost::asio::ip::tcp::socket::shutdown_both);
+	(*(connections[incoming_address])).close();
+	delete(connections[incoming_address]);
+	connections[incoming_address] = nullptr;
 }
 
 void GenericNode::connection_received_cb(const boost::system::error_code& error)
 {
 	std::cout << "connection_received_cb()" << std::endl;
 	// me fijo de donde vino la conexion
-	string address = handler_socket->remote_endpoint().address().to_string();
+	string ip = handler_socket->remote_endpoint().address().to_string();
 	unsigned int port = handler_socket->remote_endpoint().port();
-	std::cout << address << " ";
+	std::cout << ip << " ";
 	std::cout << port << std::endl;
+	address = createAddress(ip, port);
+	std::cout << address << endl;
 
 	// Checkeo que la conexion sea de un puerto de mi red
-	if (connections.find(port) != connections.end()) {
+	if (connections.find(address) != connections.end()) {
 		// creo un socket y lo coloco en mis connecciones
 		boost::asio::ip::tcp::socket* socket = handler_socket;
-		connections[port] = socket;
+		connections[address] = socket;
 	}
 	else {
 		cout << "port no pertenece a la red" << endl;
@@ -119,7 +148,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 	listen_connection();
 
 	if (!error) {
-		read(port);
+		read(address);
 	}
 	else {
 		std::cout << error.message() << std::endl;
@@ -127,7 +156,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 }
 
 
-void GenericNode::answer(unsigned int port)
+void GenericNode::answer(string incoming_address)
 {
 	std::cout << "answer()" << std::endl;
 	if (request.size() != 0) {
@@ -139,10 +168,10 @@ void GenericNode::answer(unsigned int port)
 		// <nodo3, info_a_mandar>
 		msg = make_package();
 		boost::asio::async_write(
-			*(connections[port]),
+			*(connections[incoming_address]),
 			boost::asio::buffer(msg),
-			[this, port](const boost::system::error_code& error, size_t bytes_sent) {
-				this->response_sent_cb(error, bytes_sent, port);
+			[this, incoming_address](const boost::system::error_code& error, size_t bytes_sent) {
+				this->response_sent_cb(error, bytes_sent, incoming_address);
 			}
 		);
 	}
@@ -150,30 +179,30 @@ void GenericNode::answer(unsigned int port)
 
 
 void GenericNode::response_sent_cb(const boost::system::error_code& error,
-	size_t bytes_sent, unsigned int port)
+	size_t bytes_sent, string incoming_address)
 {
 	std::cout << "response_sent_cb()" << std::endl;
 	if (!error) {
 		std::cout << "Response sent. " << bytes_sent << " bytes." << std::endl;
 	}
-	shutdown_socket_for_connection(port);
+	shutdown_socket_for_connection(incoming_address);
 	listen_connection();
 }
 
 
-void GenericNode::read(unsigned int port) {
+void GenericNode::read(string incoming_address) {
 	std::cout << "read()" << std::endl;
-	if (connections[port] == nullptr) {
+	if (connections[incoming_address] == nullptr) {
 		cout << "handler is null" << endl;
 	}
-	(*(connections[port])).async_receive(
+	(*(connections[incoming_address])).async_receive(
 		// TODO: crear mapa de info <nodo, list()>
 		// ESTAMOS EN NODO GENERICO
 		// <nodo1, info_que_me_llego> 
 		// <nodo2, info_que_me_llego> 
 		// <nodo3, info_que_me_llego>
 		boost::asio::buffer(request.data(), request.size()),
-		std::bind(&GenericNode::message_received_cb, this, _1, _2, port)
+		std::bind(&GenericNode::message_received_cb, this, _1, _2, incoming_address)
 	);
 }
 
@@ -218,7 +247,7 @@ bool GenericNode::parse_request() {
 }
 
 
-void GenericNode::message_received_cb(const boost::system::error_code& error, size_t bytes_sent, unsigned int port) {
+void GenericNode::message_received_cb(const boost::system::error_code& error, size_t bytes_sent, string incoming_address) {
 
 	std::cout << "message_received_cb()" << std::endl;
 	if (!error) {
@@ -230,7 +259,7 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 
 	//print(request); to use this print function uncomment top of file print(...)
 	parse_request();
-	answer(port);
+	answer(incoming_address);
 }
 
 
@@ -309,26 +338,85 @@ Simulation::Simulation()
 
 Simulation::~Simulation() {
 	for (GenericNode* node : Nodes) {
-		delete(node);
+		if(node)
+			delete(node);
 	}
 	for (boost::asio::io_context* context : contexts) {
-		delete(context);
+		if(context)
+			delete(context);
 	}
 }
 
 
-void Simulation::addNode(unsigned int port) {
+void Simulation::addNode(string ip, unsigned int port) {
 
 	boost::asio::io_context* context = new boost::asio::io_context();
 	contexts.push_back(context);
-	GenericNode* newNode = new GenericNode(*context, port);
-	for (GenericNode* node : Nodes) {
-		newNode->getConnections().insert(std::pair<unsigned int, boost::asio::ip::tcp::socket*>(node->getPort(), nullptr));
-		node->getConnections().insert(std::pair<unsigned int, boost::asio::ip::tcp::socket*>(newNode->getPort(), nullptr));
-	}
+	GenericNode* newNode = new GenericNode(*context, ip, port);
+
+
 	Nodes.push_back(newNode);
 }
 
+bool Simulation::deleteNode(string ip, unsigned int port) {
+	string address = createAddress(ip, port);
+	bool res = false;
+	for (int i = 0; i < Nodes.size(); i++) {
+		if (Nodes[i]->getAddress() == address) {
+			delete(Nodes[i]);
+			Nodes.erase(Nodes.begin() + i);
+			delete(contexts[i]);
+			contexts.erase(contexts.begin() + i);
+			res = true;
+		}
+	}
+	if (!res)
+		cout << "Can't delete un-existent node" << endl;
+
+	return res;
+}
+
+
+bool Simulation::deleteConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino) {
+	string origin_address = createAddress(ip_origen, puerto_origen);
+	string destiny_address = createAddress(ip_origen, puerto_origen);
+
+	bool res = false;
+	for (GenericNode* node : Nodes) {
+		if (node->getAddress() == origin_address) {
+			node->deleteConnection(destiny_address);
+			res = true;
+		}
+	}
+
+	if (!res)
+		cout << "Nodo origen no encontrado. ¿Te olvidaste de cargarlo?" << endl;
+
+	return res;
+}
+
+bool Simulation::createConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino) {
+	string origin_address = createAddress(ip_origen, puerto_origen);
+	string destiny_address = createAddress(ip_origen, puerto_origen);
+	bool res = false;
+	for (GenericNode* node : Nodes) {
+		if (node->getAddress() == origin_address) {
+			node->addConnection(destiny_address);
+			res = true;
+		}
+	}
+
+	if (!res)
+		cout << "Nodo origen no encontrado. ¿Te olvidaste de cargarlo?" << endl;
+
+	return res;
+
+} 
+
+string Simulation::createAddress(string ip, int port) {
+	string address = ip + ":" + to_string(port);
+	return address;
+}
 
 void Simulation::startNodes() {
 	for (GenericNode* node : Nodes) {

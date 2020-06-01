@@ -68,8 +68,8 @@ int main(int argc, char** argv)
 	fsm.referenceGuiEvGen(&guiEvGen);
 	eventGen.attach(&guiEvGen);	//registro fuente de eventos
 	/* Esto serian configuraciones cuando se cargan todos los nodos */
-	sim.addNode(8080);
-	sim.addNode(80);
+	sim.addNode("127.0.0.1", 8080);
+	sim.addNode("127.0.0.1", 80);
 	// terminar las configs con un startNodes()
 	sim.startNodes();
 	/* Esto serian configuraciones pre iniciar el programa */
