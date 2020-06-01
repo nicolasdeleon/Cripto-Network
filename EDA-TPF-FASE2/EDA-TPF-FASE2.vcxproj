@@ -150,7 +150,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="eventHandling.cpp" />
+    <ClCompile Include="FullNode.cpp" />
     <ClCompile Include="genericFSM.cpp" />
+    <ClCompile Include="GenericNode.cpp" />
     <ClCompile Include="Imgui_files\imgui.cpp" />
     <ClCompile Include="Imgui_files\imgui_demo.cpp" />
     <ClCompile Include="Imgui_files\imgui_draw.cpp" />
@@ -159,10 +161,13 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="interfaseEventGenerator.cpp" />
     <ClCompile Include="Simulation.cpp" />
+    <ClCompile Include="SPVNode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="eventHandling.h" />
+    <ClInclude Include="FullNode.h" />
     <ClInclude Include="genericFSM.h" />
+    <ClInclude Include="GenericNode.h" />
     <ClInclude Include="Imgui_files\imconfig.h" />
     <ClInclude Include="Imgui_files\imgui.h" />
     <ClInclude Include="Imgui_files\imgui_impl_allegro5.h" />
@@ -172,6 +177,7 @@
     <ClInclude Include="Imgui_files\imstb_truetype.h" />
     <ClInclude Include="interfaseEventGenerator.h" />
     <ClInclude Include="Simulation.h" />
+    <ClInclude Include="SPVNode.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
