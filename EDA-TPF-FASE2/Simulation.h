@@ -9,7 +9,7 @@
 #define AMOUNT_OF_PATHS 3
 
 using namespace std;
-enum NodeType : unsigned int { FULL, SPV };
+enum class NodeType { FULL, SPV };
 
 class Simulation {
 public:

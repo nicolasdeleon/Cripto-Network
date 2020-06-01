@@ -7,7 +7,7 @@ SPVNode::SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned i
 
 void SPVNode::make_response_package(MessageIds id, std::string incoming_address) {
 	switch (id) {
-	case (MERKLE_BLOCK):
+	case (MessageIds::MERKLE_BLOCK):
 		std::cout << "sending maked package to: " << answers[incoming_address] << std::endl;
 		break;
 	default:

@@ -72,8 +72,8 @@ int main(int argc, char** argv)
 	fsm.referenceNodes(&sim);
 	eventGen.attach(&guiEvGen);	//registro fuente de eventos
 	/* Esto serian configuraciones cuando se cargan todos los nodos */
-	sim.addNode("127.0.0.1", 8080, FULL);
-	sim.addNode("127.0.0.1", 80, SPV);
+	sim.addNode("127.0.0.1", 8080, NodeType::FULL);
+	sim.addNode("127.0.0.1", 80, NodeType::SPV);
 	// terminar las configs con un startNodes()
 	sim.startNodes();
 	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P

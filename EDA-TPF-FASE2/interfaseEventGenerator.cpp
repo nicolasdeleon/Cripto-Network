@@ -185,7 +185,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 
 		if (ImGui::Button("OK", ImVec2(120, 0))) {
-			mySim->addNode(ip, port, FULL);
+			mySim->addNode(ip, port, NodeType::FULL);
 			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup();
 		}

@@ -27,10 +27,10 @@ bool Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
 	boost::asio::io_context* context = new boost::asio::io_context();
 	contexts.push_back(context);
 	GenericNode* newNode = nullptr;
-	if (NodeType == SPV) {
+	if (NodeType == NodeType::SPV) {
 		newNode = new SPVNode(*context, ip, port);
 	}
-	else if (NodeType == FULL) {
+	else if (NodeType == NodeType::FULL) {
 		newNode = new FullNode(*context, ip, port);
 	}
 	if (newNode == nullptr) {

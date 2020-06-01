@@ -212,7 +212,7 @@ bool GenericNode::parse_request(string incoming_address) {
 	// TODO ESTO ES CODIGO DE TESTEO
 
 	answers[incoming_address] = incoming_address;
-	make_response_package(MERKLE_BLOCK, incoming_address);
+	make_response_package(MessageIds::MERKLE_BLOCK, incoming_address);
 	
 	
 	bool ret = true;
