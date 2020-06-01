@@ -38,6 +38,8 @@ private:
 
 	std::string make_package();
 
+	// myClient client;
+
 	std::string msg;
 	std::string html_requested;
 	std::vector<unsigned char> request;
@@ -46,9 +48,15 @@ private:
 	boost::asio::ip::tcp::acceptor acceptor_;
 	boost::asio::ip::tcp::socket* handler_socket;
 	unsigned int port;
+	//string IP = POR AHORA HARDOCEADO A LOCAL HOST 127.0.0.1;
 	// cada nodo guarda sus conexiones con otros nodos
 	std::map<unsigned int, boost::asio::ip::tcp::socket*> connections;
+	// connections:
+	// "IP/puerto"-> 
+	// "IP/puerto2"->
 };
+
+
 
 class Simulation {
 public:
@@ -56,6 +64,7 @@ public:
 	void addNode(unsigned int port);
 	void startNodes();
 	void doNodePolls();
+	// void connect2Nodes();
 	~Simulation();
 private:
 	vector<GenericNode*> Nodes;

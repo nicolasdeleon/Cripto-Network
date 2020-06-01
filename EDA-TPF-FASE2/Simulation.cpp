@@ -71,6 +71,7 @@ void GenericNode::listen_connection()
 {
 	std::cout << "listening conection..." << std::endl;
 	this->handler_socket = new boost::asio::ip::tcp::socket(context_);
+
 	acceptor_.async_accept(
 		*(this->handler_socket),
 		[this](const boost::system::error_code& error) {
@@ -95,7 +96,7 @@ void GenericNode::shutdown_socket_for_connection(unsigned int port) {
 void GenericNode::connection_received_cb(const boost::system::error_code& error)
 {
 	std::cout << "connection_received_cb()" << std::endl;
-
+	// me fijo de donde vino la conexion
 	string address = handler_socket->remote_endpoint().address().to_string();
 	unsigned int port = handler_socket->remote_endpoint().port();
 	std::cout << address << " ";
@@ -109,7 +110,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 	}
 	else {
 		cout << "port no pertenece a la red" << endl;
-		cout << "agrego a la red esta conexion para poder debuguear el proceso de rta" << endl;
+		//		cout << "agrego a la red esta conexion para poder debuguear el proceso de rta" << endl;
 		shut_down_reciever_socket(); // para poder recibir otras conexiones
 		listen_connection();
 		return;
@@ -130,6 +131,12 @@ void GenericNode::answer(unsigned int port)
 {
 	std::cout << "answer()" << std::endl;
 	if (request.size() != 0) {
+		// OBTENGO INFO A MANDAR
+		// TODO: crear mapa de info a mandar <nodo, info>
+		// ESTAMOS EN NODO GENERICO
+		// <nodo1, info_a_mandar> 
+		// <nodo2, info_a_mandar> 
+		// <nodo3, info_a_mandar>
 		msg = make_package();
 		boost::asio::async_write(
 			*(connections[port]),
@@ -160,16 +167,35 @@ void GenericNode::read(unsigned int port) {
 		cout << "handler is null" << endl;
 	}
 	(*(connections[port])).async_receive(
+		// TODO: crear mapa de info <nodo, list()>
+		// ESTAMOS EN NODO GENERICO
+		// <nodo1, info_que_me_llego> 
+		// <nodo2, info_que_me_llego> 
+		// <nodo3, info_que_me_llego>
 		boost::asio::buffer(request.data(), request.size()),
 		std::bind(&GenericNode::message_received_cb, this, _1, _2, port)
 	);
 }
 
 
-
 bool GenericNode::parse_request() {
 	std::cout << "parse_request()" << std::endl;
+
+	// TODO: RE HACER TODO EL PARSER !!!!!
+	// 
+
 	bool ret = false;
+
+	// OBTENGO INFO DEL NODO QUE ME HABLO
+	// std::string infoAParsar(ACA DEBERIA METER LA INFO DEL NODO QUE ME HABLO);
+
+	// ARMO MENSAJE
+
+	// TODO: crear mapa de info a mandar <nodo, info>
+	// ESTAMOS EN NODO GENERICO
+	// <nodo1, info_a_mandar> 
+	// <nodo2, info_a_mandar> 
+	// <nodo3, info_a_mandar>
 
 	std::string mystring(request.begin(), request.end());
 
@@ -190,6 +216,7 @@ bool GenericNode::parse_request() {
 	}
 	return ret;
 }
+
 
 void GenericNode::message_received_cb(const boost::system::error_code& error, size_t bytes_sent, unsigned int port) {
 
@@ -279,6 +306,7 @@ Simulation::Simulation()
 
 }
 
+
 Simulation::~Simulation() {
 	for (GenericNode* node : Nodes) {
 		delete(node);
@@ -287,6 +315,7 @@ Simulation::~Simulation() {
 		delete(context);
 	}
 }
+
 
 void Simulation::addNode(unsigned int port) {
 
@@ -307,6 +336,7 @@ void Simulation::startNodes() {
 		node->start();
 	}
 }
+
 
 void Simulation::doNodePolls() {
 	for (GenericNode* node : Nodes) {
