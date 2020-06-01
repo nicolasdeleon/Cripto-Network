@@ -30,16 +30,10 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="simpleEventGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="eventHandling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="genericFSM.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MyServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Imgui_files\imgui.cpp">
@@ -66,11 +60,11 @@
     <ClCompile Include="eventHandling.cpp">
       <Filter>Source Files\FSM framework</Filter>
     </ClCompile>
+    <ClCompile Include="interfaseEventGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="simpleEventGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Simulation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -100,6 +94,9 @@
     </ClInclude>
     <ClInclude Include="eventHandling.h">
       <Filter>Header Files\FSM framework</Filter>
+    </ClInclude>
+    <ClInclude Include="interfaseEventGenerator.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

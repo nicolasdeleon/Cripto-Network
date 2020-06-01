@@ -378,9 +378,7 @@ bool Simulation::deleteNode(string ip, unsigned int port) {
 }
 
 
-bool Simulation::deleteConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino) {
-	string origin_address = createAddress(ip_origen, puerto_origen);
-	string destiny_address = createAddress(ip_origen, puerto_origen);
+bool Simulation::deleteConnection(string origin_address, string destiny_address) {
 
 	bool res = false;
 	for (GenericNode* node : Nodes) {

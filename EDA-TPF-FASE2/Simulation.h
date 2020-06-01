@@ -72,7 +72,7 @@ public:
 	void addNode(string ip, unsigned int port);
 	bool deleteNode(string ip, unsigned int port);
 	bool createConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino);
-	bool deleteConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino);
+	bool deleteConnection(string origin_adress, string destiny_address);
 	void startNodes();
 	void doNodePolls();
 	vector<GenericNode*> getNodes();
@@ -83,3 +83,5 @@ private:
 	vector<GenericNode*> Nodes;
 	vector<boost::asio::io_context*> contexts;
 };
+
+

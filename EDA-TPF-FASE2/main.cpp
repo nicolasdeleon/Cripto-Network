@@ -1,7 +1,7 @@
 #include <iostream>
 #include "eventHandling.h"
 #include "genericFSM.h"
-#include "simpleEventGenerator.h"
+#include "interfaseEventGenerator.h"
 #include "Simulation.h"
 
 enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, dummyState};
@@ -14,12 +14,12 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-		const fsmCell fsmTable[4][5] = {
-			//  E_Draw							    E_CreateNode                       E_Back                               E_NewNodeButton							E_MngNodeCnx 
-			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {dummyState,TX(dummyfunc)},	        {dummyState,TX(dummyfunc)},				{ManageConnections,TX(adhocfunc)}},		//MainMenu
-			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},			{MainMenu,TX(createNode)},				{CreatingNode,TX(dummyfunc)}},			//CreatingNode
-			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},		   {MainMenu,TX(dummyfunc)},			{CreatingNode,TX(dummyfunc)},			{ManageConnections,TX(dummyfunc)}},		//ManageConnections 
-			{	{dummyState,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},	       {CreatingNode,TX(dummyfunc)},		{ManageConnections,TX(dummyfunc)},		{dummyState,TX(dummyfunc)}}				//dummyState
+		const fsmCell fsmTable[4][4] = {
+			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx 
+			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {dummyState,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)}},		//MainMenu
+			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)}},			//CreatingNode
+			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},		   {MainMenu,TX(dummyfunc)},	  {ManageConnections,TX(dummyfunc)}},		//ManageConnections 
+			{	{dummyState,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},	       {CreatingNode,TX(dummyfunc)},	  {dummyState,TX(dummyfunc)}}				//dummyState
 			};
 	
 	//The action routines for the FSM
@@ -30,14 +30,7 @@ class FSMImplementation : public genericFSM
 		return;
 	}
 
-	void adhocfunc(genericEvent* ev)
-	{
-		cout << "ah hoc" << endl;
-		return;
-	}
-
 	void printMainMenu(genericEvent* ev) {
-		cout << "Main Menu" << endl;
 		guiEvGen->printMainMenu();
 		return;
 	}
@@ -52,19 +45,16 @@ class FSMImplementation : public genericFSM
 		return;
 	}
 
-	void createNode(genericEvent* evBase) {
-		cEventCreateNode * ev = static_cast<cEventCreateNode*>(evBase);
-		cout << "CreateNode: alias = " << ev->alias << ", ip = "<< ev->ip
-			<< ", portNumber = " << ev->port << endl;
-		return;
-	}
-
 	interfaseEventGenerator* guiEvGen;
+	Simulation* sim;
 
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],5,4,MainMenu){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],4,4,MainMenu){}
 	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
 		guiEvGen = guiEvGenerator;
+	}
+	void referenceNodes(Simulation* simulation) {
+		sim = simulation;
 	}
 };
 
@@ -75,15 +65,18 @@ int main(int argc, char** argv)
 	FSMImplementation fsm;
 	interfaseEventGenerator guiEvGen;	//generador de UN tipo de eventos
 	mainEventGenerator eventGen;	//generador de eventos de TODO el programa
+	
 
 	//netwEventGenerator netwEvGen;
 	fsm.referenceGuiEvGen(&guiEvGen);
+	fsm.referenceNodes(&sim);
 	eventGen.attach(&guiEvGen);	//registro fuente de eventos
 	/* Esto serian configuraciones cuando se cargan todos los nodos */
 	sim.addNode("127.0.0.1", 8080);
 	sim.addNode("127.0.0.1", 80);
 	// terminar las configs con un startNodes()
 	sim.startNodes();
+	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P
 	/* Esto serian configuraciones pre iniciar el programa */
 
 	bool quit = false;
