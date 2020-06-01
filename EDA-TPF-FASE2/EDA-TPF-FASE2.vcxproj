@@ -160,6 +160,7 @@
     <ClCompile Include="Imgui_files\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="interfaseEventGenerator.cpp" />
+    <ClCompile Include="MyClient.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="SPVNode.cpp" />
   </ItemGroup>
@@ -176,6 +177,8 @@
     <ClInclude Include="Imgui_files\imstb_textedit.h" />
     <ClInclude Include="Imgui_files\imstb_truetype.h" />
     <ClInclude Include="interfaseEventGenerator.h" />
+    <ClInclude Include="json.hpp" />
+    <ClInclude Include="MyClient.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="SPVNode.h" />
   </ItemGroup>

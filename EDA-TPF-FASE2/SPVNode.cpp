@@ -15,9 +15,24 @@ void SPVNode::make_response_package(MessageIds id, std::string incoming_address)
 		break;
 	}
 }
-void SPVNode::make_send_package(MessageIds id) {
 
+
+void SPVNode::send_request(MessageIds id, string ip, unsigned int port) {
+	switch (id) {
+	case(MessageIds::TRANSACTION):
+		client.methodGet("send_merkle_block", ip, port, 4, 6);
+			break;
+	case(MessageIds::FILTER):
+		break;
+	case(MessageIds::GET_BLOCK_HEADER):
+		break;
+	default:
+		std::cout << "Error format in send package: Wrong id type" << std::endl;
+		break;
+	}
 }
+
+
 SPVNode::~SPVNode() {
 
 }

@@ -6,11 +6,13 @@
 #include <streambuf>
 #include <iostream>
 #include <vector>
+#include "MyClient.h"
 
-#define REQUEST_BUFFER_LENGTH 100000
+#define REQUEST_BUFFER_LENGTH 500
 #define AMOUNT_OF_PATHS 3
 
 using message_id = unsigned int;
+enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };
 
 class GenericNode {
 public:
@@ -24,15 +26,15 @@ public:
 	std::string getIP();
 	std::string getAddress();
 	boost::asio::io_context& getNodeIoContext();
-
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port) = 0;
 	void setPort(unsigned int PORT = 80);
 
 protected:
-	enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };
 	virtual void make_response_package(MessageIds id, std::string incoming_address) = 0;
-	virtual void make_send_package(MessageIds id) = 0;
+
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
+	MyClient client;
 
 private:
 	std::string createAddress(std::string ip, int port);
@@ -49,11 +51,8 @@ private:
 
 	std::string wrap_package(std::string incoming_address);
 
-	// myClient client;
-
 	std::string html_requested;
 	std::map<std::string, std::vector<unsigned char>> requests;
-
 	
 	boost::asio::io_context& context_;
 	boost::asio::ip::tcp::acceptor acceptor_;

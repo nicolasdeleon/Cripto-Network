@@ -124,3 +124,19 @@ void Simulation::doNodePolls() {
 vector<GenericNode*> Simulation::getNodes() {
 	return Nodes;
 }
+
+void Simulation::sendMessageFromNode2Node(
+	string ip_origen,
+	unsigned int port_origen,
+	string ip_destino,
+	unsigned int port_destino,
+	MessageIds request_id) {
+
+	string origin_address = createAddress(ip_origen, port_origen);
+	bool res = false;
+	for (GenericNode* node : Nodes) {
+		if (node->getAddress() == origin_address) {
+			node->send_request(request_id, ip_destino, port_destino);
+		}
+	}
+}

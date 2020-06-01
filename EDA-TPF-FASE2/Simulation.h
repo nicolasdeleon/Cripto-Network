@@ -16,6 +16,12 @@ public:
 	Simulation();
 	bool addNode(string ip, unsigned int port, NodeType NodeType);
 	void addNodeAndStart(string ip, unsigned int port, NodeType NodeType);
+	void sendMessageFromNode2Node(
+		string ip_origen, 
+		unsigned int port_origen, 
+		string ip_destino, 
+		unsigned int port_destino,
+		MessageIds request_id);
 	bool deleteNode(string ip, unsigned int port);
 	bool createConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino);
 	bool deleteConnection(string origin_adress, string destiny_address);

@@ -18,6 +18,7 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
 	port(port),
 	ip(ip),
+	client(ip, port+1),
 	address(createAddress(ip, port)),
 	handler_socket(nullptr),
 	permitedPaths(AMOUNT_OF_PATHS)
@@ -133,7 +134,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 	unsigned int port = handler_socket->remote_endpoint().port();
 	std::cout << ip << " ";
 	std::cout << port << std::endl;
-	address = createAddress(ip, port);
+	address = createAddress(ip, port-1);
 	std::cout << address << endl;
 
 	// Checkeo que la conexion sea de un puerto de mi red
@@ -210,7 +211,7 @@ bool GenericNode::parse_request(string incoming_address) {
 	std::cout << "parse_request()" << std::endl;
 	// MERKLE_BLOCK HARDCODEADO PARA TESTEAR
 	// TODO ESTO ES CODIGO DE TESTEO
-
+	//
 	answers[incoming_address] = incoming_address;
 	make_response_package(MessageIds::MERKLE_BLOCK, incoming_address);
 	
@@ -230,6 +231,12 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 	else {
 		std::cout << bytes_sent << " bytes." << std::endl;
 	}
+
+	for (int i = 0; i < requests[incoming_address].size(); i++) {
+		std::cout << requests[incoming_address][i];
+	}
+
+	
 
 	// PARSE REQUEST:
 	// tiene que depender de cada nodo porque cada nodo puede parsear html distintos
