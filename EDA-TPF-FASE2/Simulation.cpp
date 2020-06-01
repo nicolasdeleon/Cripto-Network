@@ -76,7 +76,8 @@ void GenericNode::shutdown_open_sockets() {
 		// Accessing KEY from element pointed by it.
 		//std::string word = it->first;
 		boost::asio::ip::tcp::socket* socket = iterator->second;
-		if (socket->is_open()) {
+
+		if (socket != nullptr && socket->is_open()) {
 			socket->shutdown(boost::asio::ip::tcp::socket::shutdown_both);
 			socket->close();
 		}
@@ -397,7 +398,7 @@ bool Simulation::deleteConnection(string ip_origen, int puerto_origen, string ip
 
 bool Simulation::createConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino) {
 	string origin_address = createAddress(ip_origen, puerto_origen);
-	string destiny_address = createAddress(ip_origen, puerto_origen);
+	string destiny_address = createAddress(ip_destino, puerto_destino);
 	bool res = false;
 	for (GenericNode* node : Nodes) {
 		if (node->getAddress() == origin_address) {
