@@ -113,6 +113,12 @@ void interfaseEventGenerator::printMainMenu(void) {
 		guiEvents.push(new cEventCreateNodeScreen);
 	}
 
+	ImGui::SameLine();
+
+	if (ImGui::Button("Manage node connections")) {
+		guiEvents.push(new cEventManageConnections);
+	}
+
 	ImGui::End();
 
 	//Rendering

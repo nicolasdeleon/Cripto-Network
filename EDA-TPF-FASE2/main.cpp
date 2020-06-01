@@ -14,12 +14,12 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-		const fsmCell fsmTable[4][4] = {
-			//  EventDraw							EventCreateNodeScreen              EventBack                            EventCreateNode					   
-			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {dummyState,TX(dummyfunc)},	        {dummyState,TX(dummyfunc)}},			//MainMenu
-			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},			{MainMenu,TX(createNode)}},				//CreatingNode
-			{	{ManageConnections,TX(dummyfunc)},	{dummyState,TX(dummyfunc)},		   {MainMenu,TX(dummyfunc)},			{CreatingNode,TX(dummyfunc)}},			//ManageConnections 
-			{	{dummyState,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},	       {CreatingNode,TX(dummyfunc)},		{ManageConnections,TX(dummyfunc)}}		//dummyState
+		const fsmCell fsmTable[4][5] = {
+			//  E_Draw							    E_CreateNode                       E_Back                               E_NewNodeButton							E_MngNodeCnx 
+			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {dummyState,TX(dummyfunc)},	        {dummyState,TX(dummyfunc)},				{ManageConnections,TX(adhocfunc)}},		//MainMenu
+			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},			{MainMenu,TX(createNode)},				{CreatingNode,TX(dummyfunc)}},			//CreatingNode
+			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},		   {MainMenu,TX(dummyfunc)},			{CreatingNode,TX(dummyfunc)},			{ManageConnections,TX(dummyfunc)}},		//ManageConnections 
+			{	{dummyState,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},	       {CreatingNode,TX(dummyfunc)},		{ManageConnections,TX(dummyfunc)},		{dummyState,TX(dummyfunc)}}				//dummyState
 			};
 	
 	//The action routines for the FSM
@@ -30,13 +30,25 @@ class FSMImplementation : public genericFSM
 		return;
 	}
 
+	void adhocfunc(genericEvent* ev)
+	{
+		cout << "ah hoc" << endl;
+		return;
+	}
+
 	void printMainMenu(genericEvent* ev) {
+		cout << "Main Menu" << endl;
 		guiEvGen->printMainMenu();
 		return;
 	}
 
 	void printMakingNode(genericEvent* ev) {
 		guiEvGen->printMakingNode();
+		return;
+	}
+
+	void printManageCnx(genericEvent* ev) {
+		guiEvGen->printManageConnections();
 		return;
 	}
 
@@ -50,7 +62,7 @@ class FSMImplementation : public genericFSM
 	interfaseEventGenerator* guiEvGen;
 
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],4,4,MainMenu){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],5,4,MainMenu){}
 	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
 		guiEvGen = guiEvGenerator;
 	}
@@ -83,7 +95,7 @@ int main(int argc, char** argv)
 		if (ev != nullptr) 
 		{
 			sim.doNodePolls();
-			if (ev->getType() == EventQuit)
+			if (ev->getType() == E_Quit)
 			{
 				quit = true;
 			}
