@@ -432,3 +432,7 @@ void Simulation::doNodePolls() {
 		node->getNodeIoContext().poll();
 	}
 }
+
+vector<GenericNode*> Simulation::getNodes() {
+	return Nodes;
+}

@@ -75,7 +75,7 @@ public:
 	bool deleteConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino);
 	void startNodes();
 	void doNodePolls();
-	// void connect2Nodes();
+	vector<GenericNode*> getNodes();
 	~Simulation();
 private:
 	string createAddress(string ip, int port);
