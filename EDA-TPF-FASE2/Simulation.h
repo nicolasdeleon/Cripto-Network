@@ -5,7 +5,6 @@
 #include <iostream>
 #include <vector>
 
-
 using namespace std;
 enum class NodeType { FULL, SPV };
 
@@ -21,6 +20,7 @@ public:
 		unsigned int port_destino,
 		MessageIds request_id, unsigned int block_id = 0, unsigned int cant = 0, json Json = {});
 	bool deleteNode(string ip, unsigned int port);
+	void sendTransaction(string origin_adress, string target_adress, int amount);
 	bool createConnection(string ip_origen, int puerto_origen, string ip_destino, int puerto_destino);
 	bool deleteConnection(string origin_adress, string destiny_address);
 	void startNodes();

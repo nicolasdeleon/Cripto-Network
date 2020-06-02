@@ -143,3 +143,13 @@ void Simulation::sendMessageFromNode2Node(
 		}
 	}
 }
+
+void Simulation::sendTransaction(string origin_adress, string target_adress, int amount) {
+	
+	/*
+	for (FullNode* node : Nodes) {
+		if (node->getAddress() == origin_adress) {
+			node->sendTX("send_tx", ip, port, to_string(block_id), { 15 }, { "32423" });;
+		}
+	}*/
+}
