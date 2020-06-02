@@ -117,6 +117,7 @@ void Simulation::startNodes() {
 void Simulation::doNodePolls() {
 	for (GenericNode* node : Nodes) {
 		// Itero por todos mis nodos y hago un poll
+		cout << "Hello" << endl
 		node->getNodeIoContext().poll();
 	}
 }

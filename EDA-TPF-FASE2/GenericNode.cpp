@@ -1,4 +1,5 @@
 #include "GenericNode.h"
+#include <boost/bind.hpp>
 
 using namespace std::placeholders;
 
@@ -166,8 +167,9 @@ void GenericNode::answer(string incoming_address)
 {
 	std::cout << "answer()" << std::endl;
 	if (answers[incoming_address] != "") {
-
+		cout << "!!!!!!!!!!!!!" << answers[incoming_address] << endl;
 		string msg = wrap_package(incoming_address);
+		
 		boost::asio::async_write(
 			*(connections[incoming_address]),
 			boost::asio::buffer(msg),
@@ -245,7 +247,7 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 	parse_request(incoming_address);
 
 	// Este answer estaria piola hacerlo con curl
-	answer(incoming_address);
+	//answer(incoming_address);
 }
 
 

@@ -10,7 +10,6 @@ using namespace std;
 class FSMImplementation : public genericFSM
 {
 	
-	
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual

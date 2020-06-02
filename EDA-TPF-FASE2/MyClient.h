@@ -20,13 +20,15 @@ public:
 	MyClient(string _ip, int _port);
 	MyClient();
 	~MyClient();
-	void methodGet(string _path, string out_ip, int out_port, int block_id, int count);
-	void methodPost(string _path, string out_ip, int out_port, json to_send);
+
 	void configurateGETClient(int out_port);
 	void configuratePOSTClient(int out_port, json to_send);
-private:
-	json janswer, to_send;
+	void sendFilterMssg(string _path, string out_ip, int out_port);
+	void methodGet(string _path, string out_ip, int out_port, string block_id, int count);
+	void methodPost(string _path, string out_ip, int out_port, json to_send);
 
+private:
+	json janswer;
 	bool performGETRequest(void);
 	bool performPOSTRequest(void);
 	CURLMcode errorMulti;
