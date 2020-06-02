@@ -29,11 +29,12 @@ public:
 	virtual void send_request(MessageIds id, std::string ip, unsigned int port) = 0;
 	void setPort(unsigned int PORT = 80);
 
+
 protected:
 	virtual void make_response_package(MessageIds id, std::string incoming_address) = 0;
+	MyClient client;
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
-	MyClient client;
 
 private:
 	std::string createAddress(std::string ip, int port);
