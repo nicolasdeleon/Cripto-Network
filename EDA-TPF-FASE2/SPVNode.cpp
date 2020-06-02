@@ -20,7 +20,7 @@ void SPVNode::make_response_package(MessageIds id, std::string incoming_address)
 void SPVNode::send_request(MessageIds id, string ip, unsigned int port) {
 	switch (id) {
 	case(MessageIds::TRANSACTION):
-		client.methodGet("send_merkle_block", ip, port, 4, 6);
+		client.methodGet("send_merkle_block", ip, port, to_string(4), 6);
 			break;
 	case(MessageIds::FILTER):
 		break;

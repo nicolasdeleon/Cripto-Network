@@ -8,6 +8,7 @@
 #include <vector>
 #include "MyClient.h"
 
+ 
 #define REQUEST_BUFFER_LENGTH 500
 #define AMOUNT_OF_PATHS 3
 
@@ -28,6 +29,8 @@ public:
 	boost::asio::io_context& getNodeIoContext();
 	virtual void send_request(MessageIds id, std::string ip, unsigned int port) = 0;
 	void setPort(unsigned int PORT = 80);
+	void curlPoll();
+	
 
 
 protected:

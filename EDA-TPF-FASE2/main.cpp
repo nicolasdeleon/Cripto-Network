@@ -4,6 +4,7 @@
 #include "interfaseEventGenerator.h"
 #include "Simulation.h"
 
+
 enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, dummyState};
 
 using namespace std;

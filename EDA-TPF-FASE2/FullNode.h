@@ -18,7 +18,8 @@ public:
 	void getBlocks(string outIp, int outPort, string blockId, int numBlocks);
 	~FullNode();
 private:
-
+	unsigned int generateID(unsigned char* str);
+	vector<string> makeMerklePath(int blockNumber, string txid);
 	json blockChain;
 	json to_send;
 };

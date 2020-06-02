@@ -22,6 +22,7 @@ MyClient::MyClient(std::string _ip, int _port) //crearlo con el local host
 	{
 		Erorr_string = "No se pudo inicializar curl multi";
 	}
+	stillRunning = 0;
 }
 
 MyClient::MyClient()
@@ -41,7 +42,7 @@ void MyClient::methodGet(string _path, string out_ip, int out_port, string block
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
 	configurateGETClient(out_port);
-	performGETRequest();
+	stillRunning = true;
 }
 
 void MyClient::methodPost(string _path, string out_ip, int out_port, json to_send) //path vendria a ser lo que queres enviar
@@ -50,7 +51,7 @@ void MyClient::methodPost(string _path, string out_ip, int out_port, json to_sen
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path; //con la url le termino pasando que quiero que me devuelva
 	configuratePOSTClient(out_port, to_send);
-	performPOSTRequest();
+	stillRunning = true;
 }
 
 
@@ -122,7 +123,7 @@ void MyClient::configuratePOSTClient(int out_port, json to_send) {
 	curl_easy_setopt(handler, CURLOPT_WRITEDATA, &answer);
 }
 
-bool MyClient::performGETRequest(void)
+bool MyClient::performRequest(void)
 {
 	if (stillRunning) {
 		errorMulti = curl_multi_perform(multiHandler, &stillRunning);
@@ -141,7 +142,7 @@ bool MyClient::performGETRequest(void)
 
 		//Parseo la respuesta que buscaba.
 		janswer = json::parse(answer);
-		cout << "janswer == " << janswer << endl;
+		//cout << "janswer == " << janswer << endl;
 
 		//AQUI DEBERIA LLAMAR A UNA FUNCION CON ESA JANSWER O GUARDARLA DONDE ME INTERESE GUARDARLA
 	}
@@ -149,33 +150,6 @@ bool MyClient::performGETRequest(void)
 	return true;
 }
 
-bool MyClient::performPOSTRequest(void)
-{
-	if (ip.length() && port)
-	{
-		if (stillRunning) {
-			errorMulti = curl_multi_perform(multiHandler, &stillRunning);
-			if (errorMulti != CURLE_OK) {
-				curl_easy_cleanup(handler);
-				curl_multi_cleanup(multiHandler);
-			}
-		}
-		else {
-			//Cleans used variables.
-			curl_easy_cleanup(handler);
-			curl_multi_cleanup(multiHandler);
-
-			//Resets stillRunning to 1;
-			stillRunning = 1;
-
-			//Parseo la respuesta que buscaba.
-			janswer = json::parse(answer);
-
-			//AQUI DEBERIA LLAMAR A UNA FUNCION CON ESA JANSWER  DEL POST (PARA VERIFICAR QUE TODO FUNCO BIEN) O GUARDARLA DONDE ME INTERESE GUARDARLA
-		}
-	}
-	return true;
-}
 
 
 //Callback with string as userData.

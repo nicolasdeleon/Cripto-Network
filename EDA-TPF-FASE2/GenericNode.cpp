@@ -204,7 +204,7 @@ void GenericNode::read(string incoming_address) {
 	}
 	(*(connections[incoming_address])).async_receive(
 		boost::asio::buffer(requests[incoming_address].data(), requests[incoming_address].size()),
-		std::bind(&GenericNode::message_received_cb, this, _1, _2, incoming_address)
+		std::bind(&GenericNode::message_received_cb, this, std::placeholders::_1, std::placeholders::_2, incoming_address)
 	);
 }
 
@@ -314,5 +314,9 @@ std::string GenericNode::wrap_package(string incoming_address)
 	cout << pkg.c_str() << endl;
 
 	return pkg;
+}
+
+void GenericNode::curlPoll() {
+	client.performRequest();
 }
 
