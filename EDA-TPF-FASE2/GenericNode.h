@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include <boost\asio.hpp>
 #include <string>
 #include <fstream>
@@ -8,8 +7,7 @@
 #include <vector>
 #include "MyClient.h"
 
- 
-#define REQUEST_BUFFER_LENGTH 500
+#define REQUEST_BUFFER_LENGTH 700
 #define AMOUNT_OF_PATHS 3
 
 using message_id = unsigned int;
@@ -27,17 +25,15 @@ public:
 	std::string getIP();
 	std::string getAddress();
 	boost::asio::io_context& getNodeIoContext();
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port) = 0;
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port, unsigned int block_id = 0, unsigned int cant = 0, json Json = {}) = 0;
 	void setPort(unsigned int PORT = 80);
 	void curlPoll();
 	
 
-
 protected:
-	virtual void make_response_package(MessageIds id, std::string incoming_address) = 0;
-	MyClient client;
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
+	MyClient client;
 
 private:
 	std::string createAddress(std::string ip, int port);
@@ -51,8 +47,9 @@ private:
 	void shutdown_open_sockets();
 	void shut_down_reciever_socket();
 	void shutdown_socket_for_connection(std::string incoming_address);
+	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
 
-	std::string wrap_package(std::string incoming_address);
+	std::string wrap_package(string json_string);
 
 	std::string html_requested;
 	std::map<std::string, std::vector<unsigned char>> requests;

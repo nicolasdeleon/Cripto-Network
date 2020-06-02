@@ -1,5 +1,4 @@
 #include "GenericNode.h"
-#include <boost/bind.hpp>
 
 using namespace std::placeholders;
 
@@ -24,9 +23,6 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	handler_socket(nullptr),
 	permitedPaths(AMOUNT_OF_PATHS)
 {
-	permitedPaths.push_back("randompath/radioaficionados.html");
-	permitedPaths.push_back("index.html");
-	permitedPaths.push_back("randompath/elviajesito.html");
 }
 
 GenericNode::~GenericNode()
@@ -167,12 +163,12 @@ void GenericNode::answer(string incoming_address)
 {
 	std::cout << "answer()" << std::endl;
 	if (answers[incoming_address] != "") {
-		cout << "!!!!!!!!!!!!!" << answers[incoming_address] << endl;
-		string msg = wrap_package(incoming_address);
-		
+
+		cout << "Estoy mandando esto: " << endl;
+		cout << answers[incoming_address] << endl;
 		boost::asio::async_write(
 			*(connections[incoming_address]),
-			boost::asio::buffer(msg),
+			boost::asio::buffer(answers[incoming_address]),
 			[this, incoming_address](const boost::system::error_code& error, size_t bytes_sent) {
 				this->response_sent_cb(error, bytes_sent, incoming_address);
 			}
@@ -180,6 +176,8 @@ void GenericNode::answer(string incoming_address)
 	}
 	else {
 		cout << "Nada cargado en answer" << " // " << "Pedido de " << incoming_address << " a nodo " << address;
+		shutdown_socket_for_connection(incoming_address);
+		listen_connection();
 	}
 }
 
@@ -211,16 +209,91 @@ void GenericNode::read(string incoming_address) {
 
 bool GenericNode::parse_request(string incoming_address) {
 	std::cout << "parse_request()" << std::endl;
-	// MERKLE_BLOCK HARDCODEADO PARA TESTEAR
-	// TODO ESTO ES CODIGO DE TESTEO
-	//
-	answers[incoming_address] = incoming_address;
-	make_response_package(MessageIds::MERKLE_BLOCK, incoming_address);
+
+	bool ret = false;
+	unsigned int block_id, count;
+	string path_requested;
+
+	std::string mystring(requests[incoming_address].begin(), requests[incoming_address].end());
+
+	// CHECK: 
+		// - http v1.1 ?
+		// - GET or POST ?
+	// RETRIEVE:
+		// - path_requested
+
+	if (mystring.size() != 0
+		&& (mystring.find("GET") == 0 || mystring.find("POST") == 0)
+		&& mystring.find("HTTP/1.1") != mystring.npos)
+	{
+		// recibi un get
+		std::size_t reference_size = mystring.find("HTTP/1.1") - 5;
+		html_requested = mystring.substr(5, reference_size - 1);
+		std::cout << "Parsed without errors. The requested html is " << html_requested << std::endl;
+
+		// TODO: obtengo block id y count
+		
+		ret = true;
+	}
+	else {
+		json response;
+		response["status"] = false;
+		response["result"] = 1;
+		answers[incoming_address] = wrap_package(response.dump());
+		std::cout << "Request error " << std::endl;
+		html_requested = "error";
+	}
+
+	// CHECK:
+		// Node can handle request ?
+	if (std::find(permitedPaths.begin(), permitedPaths.end(), html_requested) != permitedPaths.end())
+	{
+		// dispatch(html_requested, incoming_address, block_id, count);
+		cout << "ke" << endl;
+	}
+	else {
+
+		json response;
+		response["status"] = false;
+		response["result"] = 1;
+		answers[incoming_address] = wrap_package(response.dump());
 	
-	
-	bool ret = true;
-	
+	}
+
 	return ret;
+}
+
+
+void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id
+	, unsigned int count) {
+	
+	json response;
+	
+	if (path == "eda_coin/send_block") {
+
+		// response = make_send_block_json
+
+	}
+	else if (path == "eda_coin/send_tx") {
+
+	}
+	else if (path == "eda_coin/send_merkle_block") {
+
+	}
+	else if (path == "eda_coin/send_filter") {
+
+	}
+	else if (path == "eda_coin/get_blocks") {
+
+	}
+	else if (path == "eda_coin/get_block_header") {
+
+	}
+	else {
+		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
+	}
+
+	answers[incoming_address] = wrap_package(response.dump());
 }
 
 
@@ -234,29 +307,19 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 		std::cout << bytes_sent << " bytes." << std::endl;
 	}
 
+	// DEBUG INFO RECIEVED
 	for (int i = 0; i < requests[incoming_address].size(); i++) {
 		std::cout << requests[incoming_address][i];
 	}
 
-	
-
-	// PARSE REQUEST:
-	// tiene que depender de cada nodo porque cada nodo puede parsear html distintos
-	// yo lo que haria es que parse_request, viendo lo que me llega por curl, decida si dado el nodo que es,
-	// mete en el buffer answer el contenido que se le pide, o agarra y decide llenar en answer el error correspondiente
 	parse_request(incoming_address);
-
-	// Este answer estaria piola hacerlo con curl
-	//answer(incoming_address);
+	answer(incoming_address);
 }
 
 
-std::string GenericNode::wrap_package(string incoming_address)
+std::string GenericNode::wrap_package(string json_string)
 {
-	// ARMO PAQUETE SI ES QUE HACE FALTA PARA ENCAPSULAR EL JSON
-	// string respuesta = answers[incoming_address];
-
-#pragma warning(disable : 4996)
+	#pragma warning(disable : 4996)
 	using namespace std; // For time_t, time and ctime;
 	string pkg = "";
 
@@ -273,34 +336,19 @@ std::string GenericNode::wrap_package(string incoming_address)
 	std::strftime(time2, 32, "%a, %d.%m.%Y %H:%M:%S GMT", ptm);
 	//----------------------------------------------------------------------------//
 
-
-	string enter = "";
-	bool availablePath = false;
-	cout << "make_package()" << endl;
-	cout << "Path requested: " << html_requested << endl;
-	for (int i = 0; i < permitedPaths.size(); i++) {
-		if (html_requested == permitedPaths.at(i)) {
-			availablePath = true;
-		}
-		cout << "Path available: " << permitedPaths.at(i) << endl;
-	}
-	cout << "availablePath ?  " << availablePath << endl;
-	if (availablePath) {
-		std::ifstream t(html_requested);
-		std::string html_to_send((std::istreambuf_iterator<char>(t)),
-			std::istreambuf_iterator<char>());
-		int file_length = html_to_send.size();
-		pkg = "HTTP/1.1 200 OK\r\n";
-		pkg += "Date: " + (string)time1 + "\r\n";
-		pkg += "Location: 127.0.0.1/data.html\r\n";
-		pkg += "Cache-Control: max-age=30\r\n";
-		pkg += "Expires: " + (string)time2 + "\r\n";
-		pkg += "Content-Length: " + to_string(file_length) + "\r\n";
-		pkg += "Content-Type: text/html; charset=iso-8859-1\r\n";
-		pkg += "\r\n";
-		pkg += html_to_send; // TODO: ACA IRIA EL JSON ????
-		pkg += "\r\n";
-	}
+	int file_length = json_string.size();
+	pkg = "HTTP/1.1 200 OK\r\n";
+	pkg += "Date: " + (string)time1 + "\r\n";
+	pkg += "Location: 127.0.0.1:80\r\n";
+	pkg += "Cache-Control: max-age=30\r\n";
+	pkg += "Expires: " + (string)time2 + "\r\n";
+	pkg += "Content-Length: " + to_string(file_length) + "\r\n";
+	pkg += "Content-Type: application/json; charset=iso-8859-1\r\n";
+	pkg += "\r\n";
+	pkg += json_string;
+	pkg += "\r\n";
+	
+	/*
 	else {
 		pkg += "HTTP/1.1 404 Not Found\r\n";
 		pkg += "Date: " + (string)time1 + "\r\n";
@@ -310,8 +358,7 @@ std::string GenericNode::wrap_package(string incoming_address)
 		pkg += "\r\n";
 		pkg += "\r\n";
 	}
-
-	cout << pkg.c_str() << endl;
+	*/
 
 	return pkg;
 }

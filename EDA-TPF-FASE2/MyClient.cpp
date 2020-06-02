@@ -36,11 +36,11 @@ MyClient::~MyClient()
 	curl_multi_cleanup(multiHandler);
 }
 
-void MyClient::methodGet(string _path, string out_ip, int out_port, string block_id, int count) //path vendria a ser lo que queres obtener
+void MyClient::methodGet(string _path, string out_ip, int out_port, int block_id, int count) //path vendria a ser lo que queres obtener
 {
 	metodo = GET; //de momento no lo uso, ver si es relevante
 	host = out_ip + ":" + to_string(out_port);
-	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
+	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + to_string(block_id) + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
 	configurateGETClient(out_port);
 	stillRunning = true;
 }
@@ -89,7 +89,7 @@ void MyClient::configuratePOSTClient(int out_port, json to_send) {
 	
 	//Esto no se si va igualmente
 
-	//Le decimos a CURL que vamos a mandar URLs codificadas y además en formato UTF8.
+	//Le decimos a CURL que vamos a mandar URLs codificadas y ademï¿½s en formato UTF8.
 	list = curl_slist_append(list, "Content-Type: application/x-www-form-urlencoded;charset=UTF-8");
 	curl_easy_setopt(handler, CURLOPT_HTTPHEADER, list);
 
@@ -105,7 +105,7 @@ void MyClient::configuratePOSTClient(int out_port, json to_send) {
 	//setea la url para leer de ahi
 	curl_easy_setopt(handler, CURLOPT_URL, url.c_str());
 
-	// Si la página nos redirije a algún lado, le decimos a curl que siga dicha redirección.
+	// Si la pï¿½gina nos redirije a algï¿½n lado, le decimos a curl que siga dicha redirecciï¿½n.
 	curl_easy_setopt(handler, CURLOPT_FOLLOWLOCATION, 1L);
 
 	//Setea protocolo (HTTP).
@@ -145,6 +145,7 @@ bool MyClient::performRequest(void)
 		//cout << "janswer == " << janswer << endl;
 
 		//AQUI DEBERIA LLAMAR A UNA FUNCION CON ESA JANSWER O GUARDARLA DONDE ME INTERESE GUARDARLA
+		cout << "janswer == " << janswer << endl;
 	}
 
 	return true;

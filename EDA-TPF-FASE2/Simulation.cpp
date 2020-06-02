@@ -78,7 +78,7 @@ bool Simulation::deleteConnection(string origin_address, string destiny_address)
 	}
 
 	if (!res)
-		cout << "Nodo origen no encontrado. ¿Te olvidaste de cargarlo?" << endl;
+		cout << "Nodo origen no encontrado. ï¿½Te olvidaste de cargarlo?" << endl;
 
 	return res;
 }
@@ -95,7 +95,7 @@ bool Simulation::createConnection(string ip_origen, int puerto_origen, string ip
 	}
 
 	if (!res)
-		cout << "Nodo origen no encontrado. ¿Te olvidaste de cargarlo?" << endl;
+		cout << "Nodo origen no encontrado. ï¿½Te olvidaste de cargarlo?" << endl;
 
 	return res;
 
@@ -131,13 +131,14 @@ void Simulation::sendMessageFromNode2Node(
 	unsigned int port_origen,
 	string ip_destino,
 	unsigned int port_destino,
-	MessageIds request_id) {
+	MessageIds request_id,
+	unsigned int block_id, unsigned int cant, json Json) {
 
 	string origin_address = createAddress(ip_origen, port_origen);
 	bool res = false;
 	for (GenericNode* node : Nodes) {
 		if (node->getAddress() == origin_address) {
-			node->send_request(request_id, ip_destino, port_destino);
+			node->send_request(request_id, ip_destino, port_destino, block_id, cant, Json);
 		}
 	}
 }
