@@ -213,7 +213,7 @@ bool GenericNode::parse_request(string incoming_address) {
 
 	bool ret = false;
 	unsigned int block_id, count;
-	string path_requested;
+	string path_requested; // TODO: Esta deberia ser la que uso para comparar!! No la otra html_requested
 
 	std::string mystring(requests[incoming_address].begin(), requests[incoming_address].end());
 
@@ -232,6 +232,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		html_requested = mystring.substr(5, reference_size - 1);
 		std::cout << "Parsed without errors. The requested html is " << html_requested << std::endl;
 		
+		// TODO: recolectar el data del 
 		// TODO: obtengo block id y count de html_requested
 		// html_requested = ....
 		// block_id = ...
@@ -275,11 +276,10 @@ bool GenericNode::parse_request(string incoming_address) {
 void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id
 	, unsigned int count) {
 	
-	json response;
 	
 	if (path == "eda_coin/send_block") {
 
-		// response = make_send_block_json
+		//make_send_block_json(string incoming_address /*y toda la data que se necesite*/);
 
 	}
 	else if (path == "eda_coin/send_tx") {
@@ -383,6 +383,7 @@ void GenericNode::curlPoll() {
 	client.performRequest();
 }
 
+<<<<<<< refs/remotes/origin/post-funcionando
 
 void GenericNode::parseHtmlRequested()
 {
@@ -400,3 +401,13 @@ void GenericNode::parseHtmlRequested()
 	counter = strtok(NULL, "="); //me quedo con lo que haya entre = y final
 	cout << counter << endl;
 }
+=======
+/*
+void GenericNode::make_send_block_json(string incoming_address, string data ....) {
+	// data = requests[incoming_address]
+	// aca tengo que responder ->  answers[incoming_address] = wrap_package(response.dump());;
+	// guardando la info en answers[incoming_address] despues se manda de nuevo al cliente
+	
+}
+*/
+>>>>>>> Comentarios
