@@ -264,7 +264,7 @@ bool GenericNode::parse_request(string incoming_address) {
 }
 
 
-void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id=0, unsigned int count=0) {
+void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id, unsigned int count) {
 	
 	json response;
 

@@ -34,8 +34,6 @@ protected:
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
 	MyClient client;
-
-private:
 	std::string createAddress(std::string ip, int port);
 	void listen_connection();
 	void answer(std::string incoming_address);

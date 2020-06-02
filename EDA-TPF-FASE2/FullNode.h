@@ -20,6 +20,6 @@ private:
 
 	unsigned int generateID(unsigned char* str);
 	vector<string> makeMerklePath(int blockNumber, string txid);
-	json blockChain;
+
 	json to_send;
 };
