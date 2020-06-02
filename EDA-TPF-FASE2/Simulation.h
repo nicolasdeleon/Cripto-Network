@@ -5,8 +5,6 @@
 #include <iostream>
 #include <vector>
 
-#define REQUEST_BUFFER_LENGTH 100000
-#define AMOUNT_OF_PATHS 3
 
 using namespace std;
 enum class NodeType { FULL, SPV };

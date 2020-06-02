@@ -8,7 +8,7 @@
 #include "MyClient.h"
 
 #define REQUEST_BUFFER_LENGTH 700
-#define AMOUNT_OF_PATHS 3
+#define AMOUNT_OF_PATHS 5
 
 using message_id = unsigned int;
 enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };

@@ -2,7 +2,7 @@
 
 SPVNode::SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
-	permitedPaths.push_back("/eda_coin/send_merkle_block");
+	permitedPaths.push_back("/eda_coin/send_merkle_block5");
 }
 
 
@@ -19,7 +19,7 @@ void SPVNode::send_request(
 		client.methodPost("send_filter", ip, port, Json);
 		break;
 	case(MessageIds::GET_BLOCK_HEADER):
-		client.methodGet("get_block_header", ip, port, block_id, cant);
+		client.methodGet("get_block_header", ip, port, to_string(block_id), cant);
 		break;
 	default:
 		std::cout << "Error format in send package: Wrong id type" << std::endl;

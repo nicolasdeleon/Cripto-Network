@@ -18,18 +18,19 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 
 
 void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, unsigned int block_id, unsigned int cant, json Json) {
+
 	switch (id) {
 	case(MessageIds::BLOCK):
-		client.methodPost("send_block", ip, port, Json);
+		sendBlock("send_block", ip, port, to_string(block_id));
 		break;
 	case(MessageIds::TRANSACTION):
-		client.methodPost("send_tx", ip, port, Json);
+		sendTX("send_tx", ip, port, to_string(block_id), { 15 }, { "32423" });
 		break;
 	case(MessageIds::MERKLE_BLOCK):
-		client.methodPost("send_merkle_block", ip, port, Json);
+		sendMklBlock("send_merkle_block", ip, port, to_string(block_id), 2);
 		break;
 	case(MessageIds::GET_BLOCKS):
-		client.methodGet("get_blocks", ip, port, block_id, cant);
+		getBlocks("get_blocks", ip, port, std::to_string(block_id), cant);
 		break;
 	default:
 		std::cout << "Error format in send package: Wrong id type" << std::endl;
@@ -96,7 +97,7 @@ void FullNode::sendFilter(string path, string outIp, int outPort) {
 	client.methodPost(path, outIp, outPort, temp);
 }
 
-void FullNode::sendBlock(string outIp, int outPort, string blockId) {
+void FullNode::sendBlock(string path_, string outIp, int outPort, string blockId) {
 
 	json temp;
 
@@ -110,15 +111,15 @@ void FullNode::sendBlock(string outIp, int outPort, string blockId) {
 			cout << "pifiaste, no existe el blockid seleccionado";
 		}
 	}
-	client.methodPost("get_block_header", outIp, outPort, temp);
+	client.methodPost(path_, outIp, outPort, temp);
 }
 
-void FullNode::getBlocks(string outIp, int outPort, string blockId, int numBlocks) {
-	client.methodGet("get_block_header", outIp, outPort, blockId, numBlocks);
+void FullNode::getBlocks(string path_, string outIp, int outPort, string blockId, int numBlocks) {
+	client.methodGet(path_, outIp, outPort, blockId, numBlocks);
 }
 
 
-string hexCodexASCII(unsigned int number) {
+string FullNode::hexCodexASCII(unsigned int number) {
 	std::stringstream ss;
 	ss << std::uppercase << std::setfill('0') << std::setw(8) << std::hex << number;
 
