@@ -31,7 +31,6 @@ public:
 
 protected:
 	virtual void make_response_package(MessageIds id, std::string incoming_address) = 0;
-
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
 	MyClient client;
@@ -48,8 +47,9 @@ private:
 	void shutdown_open_sockets();
 	void shut_down_reciever_socket();
 	void shutdown_socket_for_connection(std::string incoming_address);
+	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
 
-	std::string wrap_package(std::string incoming_address);
+	std::string wrap_package(string json_string);
 
 	std::string html_requested;
 	std::map<std::string, std::vector<unsigned char>> requests;

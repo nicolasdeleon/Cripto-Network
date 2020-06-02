@@ -141,9 +141,9 @@ bool MyClient::performGETRequest(void)
 
 		//Parseo la respuesta que buscaba.
 		janswer = json::parse(answer);
-		cout << "janswer == " << janswer << endl;
 
 		//AQUI DEBERIA LLAMAR A UNA FUNCION CON ESA JANSWER O GUARDARLA DONDE ME INTERESE GUARDARLA
+		cout << "janswer == " << janswer << endl;
 	}
 
 	return true;
