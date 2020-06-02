@@ -24,7 +24,7 @@ void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, un
 		sendBlock("send_block", ip, port, to_string(block_id));
 		break;
 	case(MessageIds::TRANSACTION):
-		sendTX("send_tx", ip, port, to_string(block_id), { 15 }, { "32423" });
+		sendTX("send_tx", ip, port, { 15 }, { "32423" });
 		break;
 	case(MessageIds::MERKLE_BLOCK):
 		sendMklBlock("send_merkle_block", ip, port, to_string(block_id), 2);
@@ -65,7 +65,7 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 	client.methodPost(path, outIp, outPort, to_send);
 }
 
-void FullNode::sendTX(string path, string outIp, int outPort, string blockId, vector<int> amounts, vector<string> publicIds) {
+void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amounts, vector<string> publicIds) {
 
 	json TX;
 	int nTxout = amounts.size();
@@ -237,3 +237,4 @@ vector<string> FullNode::makeMerklePath(int blockNumber, string txid) {
 
 	return merklePath;
 }
+

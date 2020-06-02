@@ -288,6 +288,7 @@ void interfaseEventGenerator::printManageConnections(void) {
 				ip,
 				port
 				);
+			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup(); 
 		}
 		ImGui::SetItemDefaultFocus();
@@ -321,6 +322,7 @@ void interfaseEventGenerator::printManageConnections(void) {
 
 		if (ImGui::Button("OK", ImVec2(120, 0)) && checked) {
 			mySim->deleteConnection(currentNodes[checked]->getAddress(), keysVector[checkedCnx]);
+			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SetItemDefaultFocus();
@@ -390,13 +392,21 @@ void interfaseEventGenerator::printMakeTsx(void) {
 			ImGui::RadioButton(keysVector[i].c_str(), &checkedCnx, i);
 		}
 
+		ImGui::Text("Please select the sizeof the transaction: ");
+		static int amount;
+		ImGui::InputInt("$", &amount);
+
 		if (ImGui::Button("OK", ImVec2(120, 0)) && checked) {
-			//mySim->sendMessageFromNode2Node(currentNodes[checked]->getAddress(), keysVector[checkedCnx]);
+			mySim->sendTransaction(currentNodes[checked]->getAddress(), keysVector[checkedCnx], amount);
 			ImGui::CloseCurrentPopup();
+			checkedCnx = -1;
 		}
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
+			ImGui::CloseCurrentPopup(); 
+			checkedCnx = -1;
+		}
 		ImGui::EndPopup();
 	}
 

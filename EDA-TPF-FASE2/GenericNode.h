@@ -49,6 +49,7 @@ private:
 	void shutdown_socket_for_connection(std::string incoming_address);
 	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
 
+
 	std::string wrap_package(string json_string);
 
 	std::string html_requested;
@@ -61,6 +62,8 @@ private:
 	std::string ip;
 	std::string address;
 	std::map<std::string, boost::asio::ip::tcp::socket*> connections;
+
+	json blockChain;
 
 };
 

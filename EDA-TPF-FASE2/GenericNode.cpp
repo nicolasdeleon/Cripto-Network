@@ -264,29 +264,74 @@ bool GenericNode::parse_request(string incoming_address) {
 }
 
 
-void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id
-	, unsigned int count) {
+void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id=0, unsigned int count=0) {
 	
 	json response;
+
+	response["status"] = "true";
+
 	
 	if (path == "eda_coin/send_block") {
-
-		// response = make_send_block_json
-
+		response["result"] = "null";
 	}
 	else if (path == "eda_coin/send_tx") {
-
+		response["result"] = "null";
 	}
 	else if (path == "eda_coin/send_merkle_block") {
-
+		response["result"] = "null";
 	}
 	else if (path == "eda_coin/send_filter") {
-
+		response["result"] = "null";
 	}
 	else if (path == "eda_coin/get_blocks") {
+		int blocks_left = 0;
+		bool allOk = false;
+		for (auto block : blockChain) {
+			if (block["blockid"] == block_id) {
+				allOk = true;
+				blocks_left = count--;
+				response["result"].push_back(block);
+			}
+			else if (blocks_left) {
+				blocks_left--;
+				response["result"].push_back(block);
+			}
+		}
 
+		if (allOk = false || blocks_left) {
+			response.clear();
+			response["status"] = false;
+			response["result"] = 2;
+		}
 	}
 	else if (path == "eda_coin/get_block_header") {
+		bool allOk = false;
+		if (blockChain.size()) {
+			for (auto block : blockChain) {
+				if (block["blockid"] == block_id) {
+					allOk = true;
+					response["result"]["blockid"] = block["blockid"];
+					response["result"]["height"] = block["height"];
+					response["result"]["merkleroot"] = block["merkleroot"];
+					response["result"]["nTx"] = block["nTx"];
+					response["result"]["nonce"] = block["nonce"];
+					response["result"]["previousblockid"] = block["previousblockid"];
+
+				}
+			}
+
+			if (!allOk) {
+				response.clear();
+				response["status"] = false;
+				response["result"] = 2;
+			}
+		}
+		else {
+			response.clear();
+			response["status"]["blockid"] = "00000000";
+		}
+
+
 
 	}
 	else {
