@@ -391,7 +391,7 @@ void interfaseEventGenerator::printMakeTsx(void) {
 		}
 
 		if (ImGui::Button("OK", ImVec2(120, 0)) && checked) {
-			mySim->sendMessageFromNode2Node(currentNodes[checked]->getAddress(), keysVector[checkedCnx]);
+			//mySim->sendMessageFromNode2Node(currentNodes[checked]->getAddress(), keysVector[checkedCnx]);
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SetItemDefaultFocus();
