@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include <boost\asio.hpp>
 #include <string>
 #include <fstream>
@@ -8,7 +7,7 @@
 #include <vector>
 #include "MyClient.h"
 
-#define REQUEST_BUFFER_LENGTH 500
+#define REQUEST_BUFFER_LENGTH 700
 #define AMOUNT_OF_PATHS 3
 
 using message_id = unsigned int;
@@ -26,11 +25,10 @@ public:
 	std::string getIP();
 	std::string getAddress();
 	boost::asio::io_context& getNodeIoContext();
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port) = 0;
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port, unsigned int block_id = 0, unsigned int cant = 0, json Json = {}) = 0;
 	void setPort(unsigned int PORT = 80);
 
 protected:
-	virtual void make_response_package(MessageIds id, std::string incoming_address) = 0;
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
 	MyClient client;

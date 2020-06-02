@@ -176,6 +176,8 @@ void GenericNode::answer(string incoming_address)
 	}
 	else {
 		cout << "Nada cargado en answer" << " // " << "Pedido de " << incoming_address << " a nodo " << address;
+		shutdown_socket_for_connection(incoming_address);
+		listen_connection();
 	}
 }
 
@@ -247,6 +249,7 @@ bool GenericNode::parse_request(string incoming_address) {
 	if (std::find(permitedPaths.begin(), permitedPaths.end(), html_requested) != permitedPaths.end())
 	{
 		// dispatch(html_requested, incoming_address, block_id, count);
+		cout << "ke" << endl;
 	}
 	else {
 
