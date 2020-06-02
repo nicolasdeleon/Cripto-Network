@@ -236,7 +236,11 @@ bool GenericNode::parse_request(string incoming_address) {
 		// html_requested = ....
 		// block_id = ...
 		// count
-		
+
+		parseHtmlRequested();
+
+		//url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" + to_string(count); //con la url le termino pasando que quiero que me devuelva
+
 		ret = true;
 	}
 	else {
@@ -379,3 +383,20 @@ void GenericNode::curlPoll() {
 	client.performRequest();
 }
 
+
+void GenericNode::parseHtmlRequested()
+{
+	//lo convierto a puntero a char para trabajar 
+	//con strtok que me resulto comodo (c_str() dev const char* y no funca)
+	char* str = new char[html_requested.length() + 1];
+	strcpy(str, html_requested.c_str());
+	
+	path = string(strtok(str, "?"));  //me quedo cn lo que haya hasta ?
+	cout << path << endl;
+	strtok(NULL, "="); //tiro lo que haya entre ? y =
+	block_id = string(strtok(NULL, "&")); //me quedo con lo que haya entre = y &
+	cout << block_id << endl;
+	strtok(NULL, "="); ////tiro lo que haya entre & y =
+	counter = strtok(NULL, "="); //me quedo con lo que haya entre = y final
+	cout << counter << endl;
+}

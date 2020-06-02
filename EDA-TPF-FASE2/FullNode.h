@@ -7,7 +7,7 @@ class FullNode : public GenericNode
 {
 public:
 	FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port);
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port, unsigned int block_id, unsigned int cant, json Json = {});
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant);
 	void sendMklBlock(string path, string outIp, int outPort, string blockId, int tx_pos);
 	void sendTX(string path, string outIp, int outPort, string blockId, vector<int> amounts, vector<string> publicIds);
 	vector<GenericNode*> getNodes();

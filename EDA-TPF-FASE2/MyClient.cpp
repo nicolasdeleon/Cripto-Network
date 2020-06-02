@@ -45,7 +45,7 @@ void MyClient::methodGet(string _path, string out_ip, int out_port, string block
 	recibiendoInfo = 1;
 }
 
-void MyClient::methodPost(string _path, string out_ip, int out_port, json to_send) //path vendria a ser lo que queres enviar
+void MyClient::methodPost(string _path, string out_ip, int out_port, json& to_send) //path vendria a ser lo que queres enviar
 {
 	metodo = POST; //de momento no lo uso, ver si es relevante
 	host = out_ip + ":" + to_string(out_port);
@@ -81,24 +81,26 @@ void MyClient::configurateGETClient(int out_port) {
 }
 
 //Configurates client.
-void MyClient::configuratePOSTClient(int out_port, json to_send) {
+void MyClient::configuratePOSTClient(int out_port, json& to_send) {
 	answer.clear();
 
 	struct curl_slist* list = nullptr;
-	
-	
-	//Esto no se si va igualmente
 
+	string prueba = "{\"nombre\": \"Lucas\"}";
+	string help = "hola";
+	auxiliar = to_send.dump();
 	//Le decimos a CURL que vamos a mandar URLs codificadas y adem�s en formato UTF8.
-	list = curl_slist_append(list, "Content-Type: application/json; Charset: UTF-8");
+	list = curl_slist_append(list, "Content-Type: application/json; charset=UTF-8");
+	//list = curl_slist_append(list, to_send.dump().c_str());
 	curl_easy_setopt(handler, CURLOPT_HTTPHEADER, list);
-
-
+	//curl_easy_setopt(handler, CURLOPT_CUSTOMREQUEST, "POST");
 
 	//Le decimos a CURL que trabaje con credentials.
-	string to_send_test = to_send.dump().c_str();
-	curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, to_send.dump().size());
-	curl_easy_setopt(handler, CURLOPT_POSTFIELDS, to_send.dump().c_str());
+	//string to_send_test = to_send.dump().c_str();
+	//cout << to_send_test
+	//curl_easy_setopt(handler, CURLOPT_POSTFIELDS, "hola");
+	curl_easy_setopt(handler, CURLOPT_POSTFIELDS, auxiliar.c_str());
+	curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, auxiliar.size());
 
 	//setea handler y multihandler
 	curl_multi_add_handle(multiHandler, handler);
@@ -108,6 +110,8 @@ void MyClient::configuratePOSTClient(int out_port, json to_send) {
 
 	// Si la p�gina nos redirije a alg�n lado, le decimos a curl que siga dicha redirecci�n.
 	curl_easy_setopt(handler, CURLOPT_FOLLOWLOCATION, 1L);
+
+	//curl_easy_setopt(handler, CURLOPT_VERBOSE, 1L);
 
 	//Setea protocolo (HTTP).
 	curl_easy_setopt(handler, CURLOPT_PROTOCOLS, CURLPROTO_HTTP);

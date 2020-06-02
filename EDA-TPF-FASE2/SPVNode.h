@@ -7,7 +7,7 @@ class SPVNode : public GenericNode
 {
 public:
 	SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned int port);
-	virtual void send_request(MessageIds id, string ip, unsigned int port, unsigned int block_id, unsigned int cant, json Json);
+	void send_request(MessageIds id, string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant);
 	~SPVNode();
 private:
 

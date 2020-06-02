@@ -17,7 +17,7 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 }
 
 
-void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, unsigned int block_id, unsigned int cant, json Json) {
+void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant) {
 
 	switch (id) {
 	case(MessageIds::BLOCK):

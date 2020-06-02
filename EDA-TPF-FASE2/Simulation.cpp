@@ -132,14 +132,14 @@ void Simulation::sendMessageFromNode2Node(
 	unsigned int port_origen,
 	string ip_destino,
 	unsigned int port_destino,
-	MessageIds request_id,
-	unsigned int block_id, unsigned int cant, json Json) {
+	MessageIds request_id, json& Json,
+	unsigned int block_id, unsigned int cant) {
 
 	string origin_address = createAddress(ip_origen, port_origen);
 	bool res = false;
 	for (GenericNode* node : Nodes) {
 		if (node->getAddress() == origin_address) {
-			node->send_request(request_id, ip_destino, port_destino, block_id, cant, Json);
+			node->send_request(request_id, ip_destino, port_destino, Json, block_id, cant);
 		}
 	}
 }

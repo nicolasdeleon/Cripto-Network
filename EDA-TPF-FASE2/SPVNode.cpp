@@ -9,7 +9,7 @@ SPVNode::SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned i
 void SPVNode::send_request(
 	MessageIds id, 
 	string ip, 
-	unsigned int port, unsigned int block_id, unsigned int cant, json Json) {
+	unsigned int port, json& Json, unsigned int block_id, unsigned int cant) {
 
 	switch (id) {
 	case(MessageIds::TRANSACTION):

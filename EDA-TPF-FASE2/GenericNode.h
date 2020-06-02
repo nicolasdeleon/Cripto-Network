@@ -25,7 +25,7 @@ public:
 	std::string getIP();
 	std::string getAddress();
 	boost::asio::io_context& getNodeIoContext();
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port, unsigned int block_id = 0, unsigned int cant = 0, json Json = {}) = 0;
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id = 0, unsigned int cant = 0) = 0;
 	void setPort(unsigned int PORT = 80);
 	void curlPoll();
 	
@@ -48,6 +48,7 @@ private:
 	void shut_down_reciever_socket();
 	void shutdown_socket_for_connection(std::string incoming_address);
 	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
+	void parseHtmlRequested();
 
 	std::string wrap_package(string json_string);
 
@@ -61,7 +62,7 @@ private:
 	std::string ip;
 	std::string address;
 	std::map<std::string, boost::asio::ip::tcp::socket*> connections;
-
+	std::string counter, block_id, path;
 };
 
 
