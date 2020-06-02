@@ -35,11 +35,11 @@ MyClient::~MyClient()
 	curl_multi_cleanup(multiHandler);
 }
 
-void MyClient::methodGet(string _path, string out_ip, int out_port, string block_id, int count) //path vendria a ser lo que queres obtener
+void MyClient::methodGet(string _path, string out_ip, int out_port, int block_id, int count) //path vendria a ser lo que queres obtener
 {
 	metodo = GET; //de momento no lo uso, ver si es relevante
 	host = out_ip + ":" + to_string(out_port);
-	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
+	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + to_string(block_id) + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
 	configurateGETClient(out_port);
 	performGETRequest();
 }

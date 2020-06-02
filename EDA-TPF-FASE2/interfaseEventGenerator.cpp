@@ -153,7 +153,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 	ImGui::Begin("EDAcoin", 0, 0);
 
-	ImGui::BeginChild("Node List", ImVec2(300, 400), true, ImGuiWindowFlags_None);
+	ImGui::BeginChild(".json files in current folder", ImVec2(300, 400), true, ImGuiWindowFlags_None);
 	
 	static int checked = -1;
 
@@ -175,7 +175,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 		ImGui::Separator();
 
 		static char alias[25];
-		//ImGui::InputText("Node alias", alias, sizeof(char) * 25);
+		ImGui::InputText("Node alias", alias, sizeof(char) * 25);
 
 		static char ip[25];
 		ImGui::InputText("Node ip", ip, sizeof(char) * 25, ImGuiInputTextFlags_CharsDecimal);
@@ -183,23 +183,9 @@ void interfaseEventGenerator::printMakingNode(void) {
 		static int port;
 		ImGui::InputInt("Node port", &port);
 
-		static int nodeTypecheck = -1;
-		
-		ImGui::RadioButton("FULL", &nodeTypecheck, 0);
-		ImGui::RadioButton("SPV", &nodeTypecheck, 1);
 
-		if (ImGui::Button("OK", ImVec2(120, 0)) && nodeTypecheck) {
-			NodeType nodeType;
-
-			switch (nodeTypecheck) {
-			case 0:
-				nodeType = NodeType::FULL;
-				break;
-			case 1:
-				nodeType = NodeType::SPV;
-			}
-
-			mySim->addNode(ip, port, nodeType);
+		if (ImGui::Button("OK", ImVec2(120, 0))) {
+			mySim->addNode(ip, port, NodeType::FULL);
 			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup();
 		}

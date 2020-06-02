@@ -1,5 +1,4 @@
 #include "GenericNode.h"
-#include <boost/bind.hpp>
 
 using namespace std::placeholders;
 
@@ -137,7 +136,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 
 	// Checkeo que la conexion sea de un puerto de mi red
 	if (connections.find(address) != connections.end()) {
-		// creo un socket y lo coloco en mis connecciones, expandoe l tamaï¿½o de mi vector de request
+		// creo un socket y lo coloco en mis connecciones, expandoe l tamaño de mi vector de request
 		boost::asio::ip::tcp::socket* socket = handler_socket;
 		connections[address] = socket;
 		requests[address].resize(REQUEST_BUFFER_LENGTH);
