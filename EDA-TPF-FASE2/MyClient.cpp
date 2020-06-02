@@ -12,7 +12,6 @@ MyClient::MyClient(std::string _ip, int _port) //crearlo con el local host
 	ip = _ip; //igualarlo a local post sino (hay un define) LOCALHOST
 	port = _port;
 	handler = curl_easy_init();
-	stillRunning = 1;
 	if (!handler)
 	{
 		Erorr_string = "No se pudo inicializar curl easy";
@@ -22,11 +21,12 @@ MyClient::MyClient(std::string _ip, int _port) //crearlo con el local host
 	{
 		Erorr_string = "No se pudo inicializar curl multi";
 	}
-	stillRunning = 0;
+	recibiendoInfo = 0;
 }
 
 MyClient::MyClient()
 {
+	recibiendoInfo = 0;
 }
 
 MyClient::~MyClient()
@@ -42,7 +42,7 @@ void MyClient::methodGet(string _path, string out_ip, int out_port, string block
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
 	configurateGETClient(out_port);
-	stillRunning = true;
+	recibiendoInfo = 1;
 }
 
 void MyClient::methodPost(string _path, string out_ip, int out_port, json to_send) //path vendria a ser lo que queres enviar
@@ -51,7 +51,7 @@ void MyClient::methodPost(string _path, string out_ip, int out_port, json to_sen
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path; //con la url le termino pasando que quiero que me devuelva
 	configuratePOSTClient(out_port, to_send);
-	stillRunning = true;
+	recibiendoInfo = 1;
 }
 
 
@@ -125,27 +125,22 @@ void MyClient::configuratePOSTClient(int out_port, json to_send) {
 
 bool MyClient::performRequest(void)
 {
-	if (stillRunning) {
-		errorMulti = curl_multi_perform(multiHandler, &stillRunning);
+	if (recibiendoInfo) {
+		errorMulti = curl_multi_perform(multiHandler, &recibiendoInfo);
 		if (errorMulti != CURLE_OK) {
 			curl_easy_cleanup(handler);
 			curl_multi_cleanup(multiHandler);
 		}
+
 	}
-	else {
-		//Cleans used variables.
-		curl_easy_cleanup(handler);
-		curl_multi_cleanup(multiHandler);
-
-		//Resets stillRunning to 1;
-		stillRunning = 1;
-
-		//Parseo la respuesta que buscaba.
-		janswer = json::parse(answer);
-		//cout << "janswer == " << janswer << endl;
-
-		//AQUI DEBERIA LLAMAR A UNA FUNCION CON ESA JANSWER O GUARDARLA DONDE ME INTERESE GUARDARLA
-		cout << "janswer == " << janswer << endl;
+	else if (answer != "") {
+			curl_easy_cleanup(handler);
+			curl_multi_cleanup(multiHandler);
+			janswer = json::parse(answer);
+			cout << "janswer == " << janswer << endl;
+			//Resets recibiendoInfo to 1;
+			//recibiendoInfo = 1;
+		
 	}
 
 	return true;

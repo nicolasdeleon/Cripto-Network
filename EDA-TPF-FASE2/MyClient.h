@@ -32,11 +32,12 @@ public:
 private:
 	json janswer;
 	CURLMcode errorMulti;
-	CURL* handler, * multiHandler;
+	CURL* handler;
+	CURL *multiHandler;
 	string ip, answer, url, host;
 	string Erorr_string;
 	int port;
-	int stillRunning;
+	int recibiendoInfo;
 	metodos metodo;
 };
 
