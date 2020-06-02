@@ -33,7 +33,7 @@ private:
 	json janswer;
 	CURLMcode errorMulti;
 	CURL* handler;
-	CURL *multiHandler;
+	CURL* multiHandler;
 	string ip, answer, url, host;
 	string Erorr_string;
 	int port;

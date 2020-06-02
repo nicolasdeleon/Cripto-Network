@@ -90,12 +90,13 @@ void MyClient::configuratePOSTClient(int out_port, json to_send) {
 	//Esto no se si va igualmente
 
 	//Le decimos a CURL que vamos a mandar URLs codificadas y adem�s en formato UTF8.
-	list = curl_slist_append(list, "Content-Type: application/x-www-form-urlencoded;charset=UTF-8");
+	list = curl_slist_append(list, "Content-Type: application/json; Charset: UTF-8");
 	curl_easy_setopt(handler, CURLOPT_HTTPHEADER, list);
 
 
 
 	//Le decimos a CURL que trabaje con credentials.
+	string to_send_test = to_send.dump().c_str();
 	curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, to_send.dump().size());
 	curl_easy_setopt(handler, CURLOPT_POSTFIELDS, to_send.dump().c_str());
 
@@ -138,9 +139,7 @@ bool MyClient::performRequest(void)
 			curl_multi_cleanup(multiHandler);
 			janswer = json::parse(answer);
 			cout << "janswer == " << janswer << endl;
-			//Resets recibiendoInfo to 1;
-			//recibiendoInfo = 1;
-		
+			answer = "";		
 	}
 
 	return true;

@@ -75,12 +75,12 @@ int main(int argc, char** argv)
 	/* Esto serian configuraciones cuando se cargan todos los nodos */
 	sim.addNode("127.0.0.1", 8080, NodeType::FULL);
 	sim.addNode("127.0.0.1", 80, NodeType::SPV);
-	sim.createConnection("127.0.0.1", 80, "127.0.0.1", 8080);
+	sim.createConnection("127.0.0.1", 8080, "127.0.0.1", 80);
 	// terminar las configs con un startNodes()
 	sim.startNodes();
 	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P
 	/* Esto serian configuraciones pre iniciar el programa */
-	sim.sendMessageFromNode2Node("127.0.0.1", 8080, "127.0.0.1", 80, MessageIds::GET_BLOCK_HEADER);
+	sim.sendMessageFromNode2Node("127.0.0.1", 80, "127.0.0.1", 8080, MessageIds::GET_BLOCK_HEADER);
 	bool quit = false;
 	do
 	{

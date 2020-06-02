@@ -2,7 +2,7 @@
 
 SPVNode::SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
-	permitedPaths.push_back("/eda_coin/send_merkle_block5");
+	permitedPaths.push_back("/eda_coin/send_merkle_block");
 }
 
 

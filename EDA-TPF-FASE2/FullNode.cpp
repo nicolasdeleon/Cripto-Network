@@ -43,27 +43,31 @@ FullNode::~FullNode() {
 }
 
 void FullNode::sendMklBlock(string path, string outIp, int outPort, string blockId, int tx_pos) {
-	to_send.clear();
-	to_send["blockid"] = blockId /*blockChain[blockId]*/;
+	//to_send.clear();
+	json to_send_;
+	to_send_["blockid"] = blockId /*blockChain[blockId]*/;
 
 	for (auto block : blockChain) {
+		// TODO: DECIRTE QUE ESTAS FLASHEANDO SI NO ENCUENTRA EL BLOCK ID
 		if (block["blockid"] == blockId) {
-			to_send["tx"][tx_pos] = block["tx"];
-			to_send["txPos"] = tx_pos;
-			to_send["merklePath"];
+			to_send_["tx"][tx_pos] = block["tx"];
+			to_send_["txPos"] = tx_pos;
+			to_send_["merklePath"];
 			for (auto id : makeMerklePath(blockChain, block["tx"][tx_pos]["txid"])) {
 				to_send["merklePath"].push_back({ "id", id });
 			}
 		}
 		else {
 			//pifiaste mache
-			to_send.clear();
+			//to_send.clear();
 			cout << "pifiaste, no existe el blockid seleccionado";
 		}
 	}
 
-	client.methodPost(path, outIp, outPort, to_send);
+	cout << to_send_.dump() << endl;
+	client.methodPost(path, outIp, outPort, to_send_);
 }
+
 
 void FullNode::sendTX(string path, string outIp, int outPort, string blockId, vector<int> amounts, vector<string> publicIds) {
 

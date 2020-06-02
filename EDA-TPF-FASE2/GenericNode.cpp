@@ -23,6 +23,7 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	handler_socket(nullptr),
 	permitedPaths(AMOUNT_OF_PATHS)
 {
+
 }
 
 GenericNode::~GenericNode()
@@ -230,8 +231,11 @@ bool GenericNode::parse_request(string incoming_address) {
 		std::size_t reference_size = mystring.find("HTTP/1.1") - 5;
 		html_requested = mystring.substr(5, reference_size - 1);
 		std::cout << "Parsed without errors. The requested html is " << html_requested << std::endl;
-
-		// TODO: obtengo block id y count
+		
+		// TODO: obtengo block id y count de html_requested
+		// html_requested = ....
+		// block_id = ...
+		// count
 		
 		ret = true;
 	}
@@ -249,7 +253,7 @@ bool GenericNode::parse_request(string incoming_address) {
 	if (std::find(permitedPaths.begin(), permitedPaths.end(), html_requested) != permitedPaths.end())
 	{
 		// dispatch(html_requested, incoming_address, block_id, count);
-		cout << "ke" << endl;
+		cout << "ACA HAY QUE DESCOMENTAR DISPATCH" << endl;
 	}
 	else {
 
@@ -276,18 +280,23 @@ void GenericNode::dispatch(string path, string incoming_address, unsigned int bl
 	}
 	else if (path == "eda_coin/send_tx") {
 
+		// response = make_send_block_json
 	}
 	else if (path == "eda_coin/send_merkle_block") {
 
+		// response = make_send_block_json
 	}
 	else if (path == "eda_coin/send_filter") {
 
+		// response = make_send_block_json
 	}
 	else if (path == "eda_coin/get_blocks") {
 
+		// response = make_send_block_json
 	}
 	else if (path == "eda_coin/get_block_header") {
 
+		// response = make_send_block_json
 	}
 	else {
 		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
@@ -308,8 +317,11 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 	}
 
 	// DEBUG INFO RECIEVED
+	string decode;
 	for (int i = 0; i < requests[incoming_address].size(); i++) {
 		std::cout << requests[incoming_address][i];
+		if(requests[incoming_address][i] != '\0')
+			decode += requests[incoming_address][i];
 	}
 
 	parse_request(incoming_address);
