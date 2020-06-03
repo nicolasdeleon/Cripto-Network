@@ -86,11 +86,11 @@ void MyClient::configuratePOSTClient(int out_port, json& to_send) {
 
 	struct curl_slist* list = nullptr;
 
-	string prueba = "{\"nombre\": \"Lucas\"}";
-	string help = "hola";
 	auxiliar = to_send.dump();
+
 	//Le decimos a CURL que vamos a mandar URLs codificadas y adem�s en formato UTF8.
 	list = curl_slist_append(list, "Content-Type: application/json; charset=UTF-8");
+
 	//list = curl_slist_append(list, to_send.dump().c_str());
 	curl_easy_setopt(handler, CURLOPT_HTTPHEADER, list);
 	//curl_easy_setopt(handler, CURLOPT_CUSTOMREQUEST, "POST");

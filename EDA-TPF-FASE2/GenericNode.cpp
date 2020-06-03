@@ -91,8 +91,6 @@ void GenericNode::shutdown_open_sockets() {
 
 
 void GenericNode::start() {
-	// apago y cierro el socket recien creado, REDUNDANTE, esto se podria sacar pero me tiro error si lo saco
-	// es el estado inicial de cada nodo
 	shutdown_open_sockets();
 	listen_connection();
 }
@@ -143,7 +141,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 		requests[address].resize(REQUEST_BUFFER_LENGTH);
 	}
 	else {
-		cout << "port no pertenece a la red" << endl;
+		cout << "Nodo al que se le quire hablar no esta conectado al nodo saliente. ¿Falto cargarlo?" << endl;
 		shut_down_reciever_socket(); // para poder recibir otras conexiones
 		listen_connection();
 		return;
@@ -232,12 +230,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		html_requested = mystring.substr(5, reference_size - 1);
 		std::cout << "Parsed without errors. The requested html is " << html_requested << std::endl;
 		
-		// TODO: recolectar el data del 
-		// TODO: obtengo block id y count de html_requested
-		// html_requested = ....
-		// block_id = ...
-		// count
-
+		// TODO: ver que no rompa cuando no es un GET, y agregarle la funcion para agarrar el json del POST
 		parseHtmlRequested();
 
 		//url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" + to_string(count); //con la url le termino pasando que quiero que me devuelva
@@ -276,7 +269,6 @@ bool GenericNode::parse_request(string incoming_address) {
 void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id
 	, unsigned int count) {
 	
-	
 	if (path == "eda_coin/send_block") {
 
 		//make_send_block_json(string incoming_address /*y toda la data que se necesite*/);
@@ -306,7 +298,6 @@ void GenericNode::dispatch(string path, string incoming_address, unsigned int bl
 		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
 	}
 
-	answers[incoming_address] = wrap_package(response.dump());
 }
 
 
@@ -327,7 +318,6 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 		if(requests[incoming_address][i] != '\0')
 			decode += requests[incoming_address][i];
 	}
-
 	parse_request(incoming_address);
 	answer(incoming_address);
 }
@@ -383,7 +373,6 @@ void GenericNode::curlPoll() {
 	client.performRequest();
 }
 
-<<<<<<< refs/remotes/origin/post-funcionando
 
 void GenericNode::parseHtmlRequested()
 {
@@ -401,7 +390,7 @@ void GenericNode::parseHtmlRequested()
 	counter = strtok(NULL, "="); //me quedo con lo que haya entre = y final
 	cout << counter << endl;
 }
-=======
+
 /*
 void GenericNode::make_send_block_json(string incoming_address, string data ....) {
 	// data = requests[incoming_address]
@@ -410,4 +399,3 @@ void GenericNode::make_send_block_json(string incoming_address, string data ....
 	
 }
 */
->>>>>>> Comentarios

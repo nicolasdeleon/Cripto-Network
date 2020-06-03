@@ -43,7 +43,7 @@ FullNode::~FullNode() {
 }
 
 void FullNode::sendMklBlock(string path, string outIp, int outPort, string blockId, int tx_pos) {
-	//to_send.clear();
+
 	json to_send_;
 	to_send_["blockid"] = blockId /*blockChain[blockId]*/;
 
