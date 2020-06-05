@@ -15,6 +15,7 @@ private:
 	void sendFilter(string path, string outIp, int outPort);
 	void sendBlock(string path_, string outIp, int outPort, string blockId);
 	void getBlocks(string path_, string outIp, int outPort, string blockId, int numBlocks);
+	void dispatch_response(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
 	string hexCodexASCII(unsigned int number);
 	unsigned int generateID(unsigned char* str);
 	vector<string> makeMerklePath(int blockNumber, string txid);

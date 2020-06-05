@@ -29,7 +29,6 @@ public:
 	void setPort(unsigned int PORT = 80);
 	void curlPoll();
 	string getClientRequestAnswer();
-	
 
 protected:
 	std::string createAddress(std::string ip, int port);
@@ -43,8 +42,7 @@ protected:
 	void shutdown_open_sockets();
 	void shut_down_reciever_socket();
 	void shutdown_socket_for_connection(std::string incoming_address);
-	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
-	void parseHtmlRequested();
+	virtual void dispatch_response(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0) = 0;
 	string parseEndPoint(char* str);
 	unsigned int parseBlockId(char* str);
 	unsigned int parseCount(char* str);

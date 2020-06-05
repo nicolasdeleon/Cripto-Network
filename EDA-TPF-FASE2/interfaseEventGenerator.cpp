@@ -10,7 +10,6 @@
 #define SIZE_SCREEN_X 600
 #define SIZE_SCREEN_Y 500
 
-
 interfaseEventGenerator::interfaseEventGenerator() {
 	display = nullptr;
 	alEventQueue = nullptr;

@@ -16,7 +16,7 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	permitedPaths.push_back("/eda_coin/get_block_header");
 }
 
-
+// Funcion para enviar pedido desde el nodo Full
 void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant) {
 
 	switch (id) {
@@ -38,6 +38,80 @@ void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, js
 	}
 }
 
+// Funcion que responde a un pedido desde el nodo Full
+void FullNode::dispatch_response(string path, string incoming_address, unsigned int block_id, unsigned int count) {
+	std::cout << "response_dispatch()" << std::endl;
+
+	json response;
+
+	response["status"] = "true";
+
+	if (path == "/eda_coin/send_block") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/send_tx") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/send_merkle_block") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/send_filter") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/get_blocks") {
+		int blocks_left = 0;
+		bool allOk = false;
+		for (auto block : blockChain) {
+			if (block["blockid"] == block_id) {
+				allOk = true;
+				blocks_left = count--;
+				response["result"].push_back(block);
+			}
+			else if (blocks_left) {
+				blocks_left--;
+				response["result"].push_back(block);
+			}
+		}
+
+		if (allOk = false || blocks_left) {
+			response.clear();
+			response["status"] = false;
+			response["result"] = 2;
+		}
+	}
+	else if (path == "/eda_coin/get_block_header") {
+		bool allOk = false;
+		if (blockChain.size()) {
+			for (auto block : blockChain) {
+				if (block["blockid"] == block_id) {
+					allOk = true;
+					response["result"]["blockid"] = block["blockid"];
+					response["result"]["height"] = block["height"];
+					response["result"]["merkleroot"] = block["merkleroot"];
+					response["result"]["nTx"] = block["nTx"];
+					response["result"]["nonce"] = block["nonce"];
+					response["result"]["previousblockid"] = block["previousblockid"];
+				}
+			}
+			if (!allOk) {
+				response.clear();
+				response["status"] = false;
+				response["result"] = 2;
+			}
+		}
+		else {
+			response.clear();
+			response["status"]["blockid"] = "00000000";
+		}
+	}
+	else {
+		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
+	}
+
+	std::cout << "Respuesta del servidor al pedido:" << endl << response.dump() << std::endl;
+	answers[incoming_address] = wrap_package(response.dump());
+
+}
 
 FullNode::~FullNode() {
 }
@@ -58,9 +132,7 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 			}
 		}
 		else {
-			//pifiaste mache
-			//to_send.clear();
-			cout << "pifiaste, no existe el blockid seleccionado";
+			cout << "No existe el blockid seleccionado";
 		}
 	}
 

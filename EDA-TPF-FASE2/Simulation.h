@@ -30,7 +30,6 @@ public:
 	~Simulation();
 private:
 	string createAddress(string ip, int port);
-
 	vector<GenericNode*> Nodes;
 	vector<boost::asio::io_context*> contexts;
 };
