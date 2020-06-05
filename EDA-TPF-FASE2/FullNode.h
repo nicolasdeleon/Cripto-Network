@@ -9,9 +9,9 @@ public:
 	FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port);
 	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant);
 	~FullNode();
+	void sendTX(string path, string outIp, int outPort, vector<int> amounts, vector<string> publicIds);
 private:
 	void sendMklBlock(string path, string outIp, int outPort, string blockId, int tx_pos);
-	void sendTX(string path, string outIp, int outPort, string blockId, vector<int> amounts, vector<string> publicIds);
 	void sendFilter(string path, string outIp, int outPort);
 	void sendBlock(string path_, string outIp, int outPort, string blockId);
 	void getBlocks(string path_, string outIp, int outPort, string blockId, int numBlocks);

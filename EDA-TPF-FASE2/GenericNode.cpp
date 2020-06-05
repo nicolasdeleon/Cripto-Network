@@ -19,6 +19,8 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	port(port),
 	ip(ip),
 	client(ip, port+1),
+	block_id("0"),
+	counter("0"),
 	address(createAddress(ip, port)),
 	handler_socket(nullptr),
 	permitedPaths(AMOUNT_OF_PATHS)
@@ -250,7 +252,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		// Node can handle request ?
 	if (std::find(permitedPaths.begin(), permitedPaths.end(), html_requested) != permitedPaths.end())
 	{
-		// dispatch(html_requested, incoming_address, block_id, count);
+		dispatch(html_requested, incoming_address, stoi(this->block_id), stoi(this->counter));
 		cout << "ACA HAY QUE DESCOMENTAR DISPATCH" << endl;
 	}
 	else {
@@ -273,19 +275,19 @@ void GenericNode::dispatch(string path, string incoming_address, unsigned int bl
 	response["status"] = "true";
 
 	
-	if (path == "eda_coin/send_block") {
+	if (path == "/eda_coin/send_block") {
 		response["result"] = "null";
 	}
-	else if (path == "eda_coin/send_tx") {
+	else if (path == "/eda_coin/send_tx") {
 		response["result"] = "null";
 	}
-	else if (path == "eda_coin/send_merkle_block") {
+	else if (path == "/eda_coin/send_merkle_block") {
 		response["result"] = "null";
 	}
-	else if (path == "eda_coin/send_filter") {
+	else if (path == "/eda_coin/send_filter") {
 		response["result"] = "null";
 	}
-	else if (path == "eda_coin/get_blocks") {
+	else if (path == "/eda_coin/get_blocks") {
 		int blocks_left = 0;
 		bool allOk = false;
 		for (auto block : blockChain) {
@@ -306,7 +308,7 @@ void GenericNode::dispatch(string path, string incoming_address, unsigned int bl
 			response["result"] = 2;
 		}
 	}
-	else if (path == "eda_coin/get_block_header") {
+	else if (path == "/eda_coin/get_block_header") {
 		bool allOk = false;
 		if (blockChain.size()) {
 			for (auto block : blockChain) {
@@ -332,13 +334,13 @@ void GenericNode::dispatch(string path, string incoming_address, unsigned int bl
 			response.clear();
 			response["status"]["blockid"] = "00000000";
 		}
-
-
-
 	}
 	else {
 		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
 	}
+
+	std::cout << "Respuesta del servidor al pedido:" << endl << response.dump() << std::endl;
+	answers[incoming_address] = wrap_package(response.dump());
 
 }
 
@@ -423,13 +425,19 @@ void GenericNode::parseHtmlRequested()
 	char* str = new char[html_requested.length() + 1];
 	strcpy(str, html_requested.c_str());
 	
-	path = string(strtok(str, "?"));  //me quedo cn lo que haya hasta ?
+	char* strok = strtok(str, "?");
+	if(strok != nullptr)
+		path = string(strok);  //me quedo cn lo que haya hasta ?
 	cout << path << endl;
 	strtok(NULL, "="); //tiro lo que haya entre ? y =
-	block_id = string(strtok(NULL, "&")); //me quedo con lo que haya entre = y &
+	strok = strtok(NULL, "&");
+	if (strok != nullptr)
+		block_id = string(strok); //me quedo con lo que haya entre = y &
 	cout << block_id << endl;
 	strtok(NULL, "="); ////tiro lo que haya entre & y =
-	counter = strtok(NULL, "="); //me quedo con lo que haya entre = y final
+	strok = strtok(NULL, "=");
+	if (strok != nullptr)
+		counter = strok; //me quedo con lo que haya entre = y final
 	cout << counter << endl;
 }
 
