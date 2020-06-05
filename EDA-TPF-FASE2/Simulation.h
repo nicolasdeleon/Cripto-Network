@@ -26,6 +26,7 @@ public:
 	void startNodes();
 	void doNodePolls();
 	vector<GenericNode*> getNodes();
+	string getRequestAnswer(string address);
 	~Simulation();
 private:
 	string createAddress(string ip, int port);

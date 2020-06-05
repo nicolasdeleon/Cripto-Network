@@ -142,13 +142,15 @@ bool MyClient::performRequest(void)
 			curl_easy_cleanup(handler);
 			curl_multi_cleanup(multiHandler);
 			janswer = json::parse(answer);
-			cout << "janswer == " << janswer << endl;
 			answer = "";		
 	}
 
 	return true;
 }
 
+string MyClient::getAnswer() {
+	return janswer.dump();
+}
 
 
 //Callback with string as userData.

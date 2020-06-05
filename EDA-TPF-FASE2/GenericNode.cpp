@@ -19,8 +19,6 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	port(port),
 	ip(ip),
 	client(ip, port+1),
-	block_id("0"),
-	counter("0"),
 	address(createAddress(ip, port)),
 	handler_socket(nullptr),
 	permitedPaths(AMOUNT_OF_PATHS)
@@ -212,10 +210,13 @@ bool GenericNode::parse_request(string incoming_address) {
 	std::cout << "parse_request()" << std::endl;
 
 	bool ret = false;
-	unsigned int block_id, count;
-	string path_requested; // TODO: Esta deberia ser la que uso para comparar!! No la otra html_requested
+	string POST_request = "";
+	json POST_requestJSON;
+	unsigned int block_id=0, count=0;
+	string path_requested;
 
 	std::string mystring(requests[incoming_address].begin(), requests[incoming_address].end());
+
 
 	// CHECK: 
 		// - http v1.1 ?
@@ -229,14 +230,24 @@ bool GenericNode::parse_request(string incoming_address) {
 	{
 		// recibi un get
 		std::size_t reference_size = mystring.find("HTTP/1.1") - 5;
-		html_requested = mystring.substr(5, reference_size - 1);
-		std::cout << "Parsed without errors. The requested html is " << html_requested << std::endl;
+		path_requested = mystring.substr(5, reference_size - 1);
+		std::cout << "Parsed without errors. The requested html is " << path_requested << std::endl;
 		
 		// TODO: ver que no rompa cuando no es un GET, y agregarle la funcion para agarrar el json del POST
-		parseHtmlRequested();
+		char* str = new char[path_requested.length() + 1];
+		strcpy(str, path_requested.c_str());
+		path_requested = parseEndPoint(str);
+		block_id = parseBlockId(str);
+		count = parseCount(str);
 
-		//url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" + to_string(count); //con la url le termino pasando que quiero que me devuelva
-
+		// get POST json
+		int j = mystring.find('{');
+		if (j != string::npos)
+			while (mystring[j] != '\0') {
+				POST_request += mystring[j];
+				j++;
+			}
+		POST_requestJSON = json::parse(POST_request);
 		ret = true;
 	}
 	else {
@@ -245,15 +256,14 @@ bool GenericNode::parse_request(string incoming_address) {
 		response["result"] = 1;
 		answers[incoming_address] = wrap_package(response.dump());
 		std::cout << "Request error " << std::endl;
-		html_requested = "error";
 	}
 
 	// CHECK:
 		// Node can handle request ?
-	if (std::find(permitedPaths.begin(), permitedPaths.end(), html_requested) != permitedPaths.end())
+	if (std::find(permitedPaths.begin(), permitedPaths.end(), path_requested) != permitedPaths.end())
 	{
-		dispatch(html_requested, incoming_address, stoi(this->block_id), stoi(this->counter));
-		cout << "ACA HAY QUE DESCOMENTAR DISPATCH" << endl;
+		dispatch(path_requested, incoming_address, block_id, count);
+		// TODO: handleRequest() hago lo que tenga que hacer con POST_requestJSON
 	}
 	else {
 
@@ -269,12 +279,12 @@ bool GenericNode::parse_request(string incoming_address) {
 
 
 void GenericNode::dispatch(string path, string incoming_address, unsigned int block_id, unsigned int count) {
-	
+	std::cout << "response_dispatch()" << std::endl;
+
 	json response;
 
 	response["status"] = "true";
 
-	
 	if (path == "/eda_coin/send_block") {
 		response["result"] = "null";
 	}
@@ -397,18 +407,6 @@ std::string GenericNode::wrap_package(string json_string)
 	pkg += "\r\n";
 	pkg += json_string;
 	pkg += "\r\n";
-	
-	/*
-	else {
-		pkg += "HTTP/1.1 404 Not Found\r\n";
-		pkg += "Date: " + (string)time1 + "\r\n";
-		pkg += "Cache-Control: public, max-age=30\r\n";
-		pkg += "Expires: " + (string)time2 + "\r\n";
-		pkg += "Content-Length: 0\r\n";
-		pkg += "\r\n";
-		pkg += "\r\n";
-	}
-	*/
 
 	return pkg;
 }
@@ -417,35 +415,38 @@ void GenericNode::curlPoll() {
 	client.performRequest();
 }
 
-
-void GenericNode::parseHtmlRequested()
+string GenericNode::parseEndPoint(char* str)
 {
-	//lo convierto a puntero a char para trabajar 
-	//con strtok que me resulto comodo (c_str() dev const char* y no funca)
-	char* str = new char[html_requested.length() + 1];
-	strcpy(str, html_requested.c_str());
-	
+	string returnPath;
 	char* strok = strtok(str, "?");
-	if(strok != nullptr)
-		path = string(strok);  //me quedo cn lo que haya hasta ?
-	cout << path << endl;
+	if (strok != nullptr)
+		returnPath = string(strok);  //me quedo cn lo que haya hasta ?
+	cout << "Path parsed: " << returnPath << endl;
 	strtok(NULL, "="); //tiro lo que haya entre ? y =
-	strok = strtok(NULL, "&");
-	if (strok != nullptr)
-		block_id = string(strok); //me quedo con lo que haya entre = y &
-	cout << block_id << endl;
-	strtok(NULL, "="); ////tiro lo que haya entre & y =
-	strok = strtok(NULL, "=");
-	if (strok != nullptr)
-		counter = strok; //me quedo con lo que haya entre = y final
-	cout << counter << endl;
+	return returnPath;
 }
 
-/*
-void GenericNode::make_send_block_json(string incoming_address, string data ....) {
-	// data = requests[incoming_address]
-	// aca tengo que responder ->  answers[incoming_address] = wrap_package(response.dump());;
-	// guardando la info en answers[incoming_address] despues se manda de nuevo al cliente
-	
+unsigned int GenericNode::parseBlockId(char* str)
+{
+	unsigned int returnBlock_id = 0;
+	char* strok = strtok(NULL, "&");
+	if (strok != nullptr)
+		returnBlock_id = stoi(string(strok)); //me quedo con lo que haya entre = y &
+	strtok(NULL, "="); ////tiro lo que haya entre & y =
+	cout << "Block id parsed: " << returnBlock_id << endl;
+	return returnBlock_id;
 }
-*/
+
+unsigned int GenericNode::parseCount(char* str)
+{
+	unsigned int c=0;
+	char *strok = strtok(NULL, "=");
+	if (strok != nullptr)
+		c = stoi(string(strok)); //me quedo con lo que haya entre = y final
+	cout << "Block count parsed: " << c << endl;
+	return c;
+}
+
+string GenericNode::getClientRequestAnswer() {
+	return client.getAnswer();
+}

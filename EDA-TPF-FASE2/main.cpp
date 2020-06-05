@@ -87,14 +87,22 @@ int main(int argc, char** argv)
 	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P
 	/* Esto serian configuraciones pre iniciar el programa */
 	json myj;
-	myj["mi_campo"] = "hola";
+	string mi_campo = "mi-campo";
+	string hola = "hola";
+	myj[mi_campo] = "hola";
 	sim.sendMessageFromNode2Node("127.0.0.1", 80, "127.0.0.1", 8080, MessageIds::TRANSACTION, myj, 15, 3);
 	bool quit = false;
+	bool showOnce = true;
+
 	do
 	{
 		genericEvent * ev;
 		ev = eventGen.getNextEvent();
 		sim.doNodePolls();
+		if (showOnce && sim.getRequestAnswer("127.0.0.1:80").size() != 0) {
+			cout << "Answer from 8080: " << sim.getRequestAnswer("127.0.0.1:80") << std::endl;
+			showOnce = false;
+		}
 		if (ev != nullptr) 
 		{
 			if (ev->getType() == E_Quit)
@@ -111,6 +119,3 @@ int main(int argc, char** argv)
 	//system("pause");
 	return 0;
 }
-
-
-
