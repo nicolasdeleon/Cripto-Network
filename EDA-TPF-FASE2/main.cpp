@@ -4,7 +4,8 @@
 #include "interfaseEventGenerator.h"
 #include "Simulation.h"
 
-enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, dummyState};
+
+enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, dummyState};
 
 using namespace std;
 class FSMImplementation : public genericFSM
@@ -14,12 +15,12 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-		const fsmCell fsmTable[4][4] = {
-			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx 
-			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {dummyState,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)}},		//MainMenu
-			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)}},			//CreatingNode
-			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},		   {MainMenu,TX(dummyfunc)},	  {ManageConnections,TX(dummyfunc)}},		//ManageConnections 
-			{	{dummyState,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},	       {CreatingNode,TX(dummyfunc)},	  {dummyState,TX(dummyfunc)}}				//dummyState
+		const fsmCell fsmTable[4][5] = {
+			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx							E_MakeTsx													
+			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)}},  //MainMenu
+			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)}},  //CreatingNode
+			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)}, {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
+			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		      {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}}	  //MakeTsx
 			};
 	
 	//The action routines for the FSM
@@ -45,11 +46,16 @@ class FSMImplementation : public genericFSM
 		return;
 	}
 
+	void printMakeTsx(genericEvent* ev) {
+		guiEvGen->printMakeTsx();
+		return;
+	}
+
 	interfaseEventGenerator* guiEvGen;
 	Simulation* sim;
 
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],4,4,MainMenu){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],5,4,MainMenu){}
 	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
 		guiEvGen = guiEvGenerator;
 	}
@@ -72,22 +78,25 @@ int main(int argc, char** argv)
 	fsm.referenceNodes(&sim);
 	eventGen.attach(&guiEvGen);	//registro fuente de eventos
 	/* Esto serian configuraciones cuando se cargan todos los nodos */
-	sim.addNode("127.0.0.1", 8080);
-	sim.addNode("127.0.0.1", 80);
+	sim.addNode("127.0.0.1", 8080, NodeType::FULL);
+	sim.addNode("127.0.0.1", 80, NodeType::SPV);
+	sim.createConnection("127.0.0.1", 80, "127.0.0.1", 8080);
+	sim.createConnection("127.0.0.1", 8080, "127.0.0.1", 80);
 	// terminar las configs con un startNodes()
 	sim.startNodes();
 	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P
 	/* Esto serian configuraciones pre iniciar el programa */
-
+	json myj;
+	myj["mi_campo"] = "hola";
+	sim.sendMessageFromNode2Node("127.0.0.1", 80, "127.0.0.1", 8080, MessageIds::TRANSACTION, myj, 15, 3);
 	bool quit = false;
 	do
 	{
-
 		genericEvent * ev;
 		ev = eventGen.getNextEvent();
+		sim.doNodePolls();
 		if (ev != nullptr) 
 		{
-			sim.doNodePolls();
 			if (ev->getType() == E_Quit)
 			{
 				quit = true;

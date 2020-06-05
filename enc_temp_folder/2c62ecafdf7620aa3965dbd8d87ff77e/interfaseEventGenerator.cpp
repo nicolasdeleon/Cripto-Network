@@ -1,11 +1,13 @@
-#include <iostream>
-
 #include "interfaseEventGenerator.h"
+
+#include <iostream>
 
 #include "imgui_files/imgui.h"
 #include "imgui_files/imgui_impl_allegro5.h"
+
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
+
 
 #define SIZE_SCREEN_X 600
 #define SIZE_SCREEN_Y 500
@@ -151,6 +153,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 	ImGui_ImplAllegro5_NewFrame();
 	ImGui::NewFrame();
 
+
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(ImVec2(SIZE_SCREEN_X, SIZE_SCREEN_X));
 
@@ -166,6 +169,8 @@ void interfaseEventGenerator::printMakingNode(void) {
 	}
 
 	ImGui::EndChild();
+
+
 
 	if (ImGui::Button("Create New Node"))
 		ImGui::OpenPopup("New Node");
@@ -183,6 +188,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 		static int port;
 		ImGui::InputInt("Node port", &port);
+
 
 		if (ImGui::Button("OK", ImVec2(120, 0))) {
 			mySim->addNode(ip, port, NodeType::FULL);
@@ -216,6 +222,8 @@ void interfaseEventGenerator::printMakingNode(void) {
 		guiEvents.push(new cEventBack);
 	}
 
+
+
 	ImGui::SameLine();
 
 	ImGui::End();
@@ -225,7 +233,9 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 	al_clear_to_color(al_map_rgb(211, 211, 211));
 
+
 	ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
+
 
 	al_flip_display();
 }
