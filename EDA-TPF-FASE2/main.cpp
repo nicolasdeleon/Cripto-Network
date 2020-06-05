@@ -1,9 +1,11 @@
 #include <iostream>
 #include "eventHandling.h"
 #include "genericFSM.h"
-#include "simpleEventGenerator.h"
+#include "interfaseEventGenerator.h"
+#include "Simulation.h"
 
-enum implStates: stateTypes {State0, State1, State2, State3};
+
+enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, dummyState};
 
 using namespace std;
 class FSMImplementation : public genericFSM
@@ -13,62 +15,89 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-	const fsmCell fsmTable[4][4] =  {
-		//       EventA                 EventB                  EventC                  EventD
-		{  	{State0,TX(prueba1)},		{State1,TX(prueba2)},		{State2,TX(prueba3)},		{State3,TX(prueba4)}},   //State0
-		{	{State1,TX(prueba1)},		{State2,TX(prueba2)},		{State3,TX(prueba3)},		{State0,TX(prueba4)}},   //State1
-		{	{State2,TX(prueba1)},		{State3,TX(prueba2)},		{State0,TX(prueba3)},		{State1,TX(prueba1)}},   //State2
-		{	{State3,TX(prueba1)},		{State0,TX(prueba2)},		{State1,TX(prueba3)},		{State2,TX(prueba4)}}    //State3 
-		};
+		const fsmCell fsmTable[4][5] = {
+			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx							E_MakeTsx													
+			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)}},  //MainMenu
+			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)}},  //CreatingNode
+			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)}, {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
+			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		      {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}}	  //MakeTsx
+			};
 	
 	//The action routines for the FSM
 	//These actions should not generate fsmEvents
 	
-	void prueba1(genericEvent * ev)
+	void dummyfunc(genericEvent * ev)
 	{
-		cout << "prueba 1" <<endl;
 		return;
 	}
-	void prueba2(genericEvent * ev)
-	{
-		cout << "prueba 2" <<endl;
+
+	void printMainMenu(genericEvent* ev) {
+		guiEvGen->printMainMenu();
 		return;
 	}
-	void prueba3(genericEvent * ev)
-	{
-		cout << "prueba 3" <<endl;
+
+	void printMakingNode(genericEvent* ev) {
+		guiEvGen->printMakingNode();
 		return;
 	}
-	void prueba4(genericEvent * ev)
-	{
-		cout << "prueba 4" <<endl;
+
+	void printManageCnx(genericEvent* ev) {
+		guiEvGen->printManageConnections();
 		return;
 	}
-	
+
+	void printMakeTsx(genericEvent* ev) {
+		guiEvGen->printMakeTsx();
+		return;
+	}
+
+	interfaseEventGenerator* guiEvGen;
+	Simulation* sim;
+
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],4,4,State0){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],5,4,MainMenu){}
+	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
+		guiEvGen = guiEvGenerator;
+	}
+	void referenceNodes(Simulation* simulation) {
+		sim = simulation;
+	}
 };
 
 
 int main(int argc, char** argv) 
 {
+	Simulation sim;
 	FSMImplementation fsm;
-	simpleEventGenerator s;	//generador de UN tipo de eventos
+	interfaseEventGenerator guiEvGen;	//generador de UN tipo de eventos
 	mainEventGenerator eventGen;	//generador de eventos de TODO el programa
-
-	//guiEventGenerator guiEvGen;
-	//netwEventGenerator netwEvGen;
-
-	eventGen.attach(&s);	//registro fuente de eventos
 	
+
+	//netwEventGenerator netwEvGen;
+	fsm.referenceGuiEvGen(&guiEvGen);
+	fsm.referenceNodes(&sim);
+	eventGen.attach(&guiEvGen);	//registro fuente de eventos
+	/* Esto serian configuraciones cuando se cargan todos los nodos */
+	sim.addNode("127.0.0.1", 8080, NodeType::FULL);
+	sim.addNode("127.0.0.1", 80, NodeType::SPV);
+	sim.createConnection("127.0.0.1", 80, "127.0.0.1", 8080);
+	sim.createConnection("127.0.0.1", 8080, "127.0.0.1", 80);
+	// terminar las configs con un startNodes()
+	sim.startNodes();
+	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P
+	/* Esto serian configuraciones pre iniciar el programa */
+	json myj;
+	myj["mi_campo"] = "hola";
+	sim.sendMessageFromNode2Node("127.0.0.1", 80, "127.0.0.1", 8080, MessageIds::TRANSACTION, myj, 15, 3);
 	bool quit = false;
 	do
 	{
 		genericEvent * ev;
 		ev = eventGen.getNextEvent();
+		sim.doNodePolls();
 		if (ev != nullptr) 
 		{
-			if (ev->getType() == EventQuit)
+			if (ev->getType() == E_Quit)
 			{
 				quit = true;
 			}
@@ -79,7 +108,7 @@ int main(int argc, char** argv)
 	} 
 	while (!quit);
 		
-	system("pause");
+	//system("pause");
 	return 0;
 }
 

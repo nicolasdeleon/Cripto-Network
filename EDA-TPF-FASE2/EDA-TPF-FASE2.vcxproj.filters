@@ -13,12 +13,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\ImguiSource">
+      <UniqueIdentifier>{2ba45bcd-9799-4053-983d-e4b2a6f53593}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Imgui">
+      <UniqueIdentifier>{882ed9fd-474d-4cfd-b310-de1a8e778a09}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\FSM framework">
+      <UniqueIdentifier>{fe027232-cafb-45d7-b35f-2e55fbeda8ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FSM framework">
+      <UniqueIdentifier>{89591a8f-a8a2-45b0-bce5-4468b98f1cd8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="simpleEventGenerator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="eventHandling.cpp">
@@ -27,21 +36,93 @@
     <ClCompile Include="genericFSM.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyServer.cpp">
+    <ClCompile Include="Imgui_files\imgui.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_demo.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_draw.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_impl_allegro5.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Imgui_files\imgui_widgets.cpp">
+      <Filter>Source Files\ImguiSource</Filter>
+    </ClCompile>
+    <ClCompile Include="Simulation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="genericFSM.cpp">
+      <Filter>Source Files\FSM framework</Filter>
+    </ClCompile>
+    <ClCompile Include="eventHandling.cpp">
+      <Filter>Source Files\FSM framework</Filter>
+    </ClCompile>
+    <ClCompile Include="interfaseEventGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GenericNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SPVNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FullNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="simpleEventGenerator.h">
+    <ClInclude Include="Simulation.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="eventHandling.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="Imgui_files\imconfig.h">
+      <Filter>Header Files\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imgui.h">
+      <Filter>Header Files\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imgui_impl_allegro5.h">
+      <Filter>Header Files\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imstb_rectpack.h">
+      <Filter>Header Files\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imgui_internal.h">
+      <Filter>Header Files\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imstb_textedit.h">
+      <Filter>Header Files\Imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Imgui_files\imstb_truetype.h">
+      <Filter>Header Files\Imgui</Filter>
     </ClInclude>
     <ClInclude Include="genericFSM.h">
+      <Filter>Header Files\FSM framework</Filter>
+    </ClInclude>
+    <ClInclude Include="eventHandling.h">
+      <Filter>Header Files\FSM framework</Filter>
+    </ClInclude>
+    <ClInclude Include="interfaseEventGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MyServer.h">
+    <ClInclude Include="GenericNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SPVNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FullNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MyClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="json.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
