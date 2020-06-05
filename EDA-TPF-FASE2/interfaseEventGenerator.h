@@ -7,7 +7,7 @@
 
 using namespace std;
 
-enum implEvent : eventTypes { E_Draw, E_CreateNode, E_Back, E_MngNodeCnx, E_Quit};
+enum implEvent : eventTypes { E_Draw, E_CreateNode, E_Back, E_MngNodeCnx, E_MakeTsx, E_Quit};
 
 class cEventDraw : public genericEvent
 {
@@ -39,6 +39,12 @@ public:
 	eventTypes getType(void) { return E_MngNodeCnx; }
 };
 
+class cEventMakeTsx : public genericEvent
+{
+public:
+	eventTypes getType(void) { return E_MakeTsx; }
+};
+
 
 class interfaseEventGenerator : public eventGenerator
 {
@@ -50,6 +56,7 @@ class interfaseEventGenerator : public eventGenerator
 	void printMainMenu(void);
 	void printMakingNode(void);
 	void printManageConnections(void);
+	void printMakeTsx(void);
 	void linkSimulation(Simulation* sim) {
 		mySim = sim;
 		currentNodes = mySim->getNodes();

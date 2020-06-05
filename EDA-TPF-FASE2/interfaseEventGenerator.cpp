@@ -129,6 +129,12 @@ void interfaseEventGenerator::printMainMenu(void) {
 		guiEvents.push(new cEventManageConnections);
 	}
 
+	ImGui::SameLine();
+
+	if (ImGui::Button("Make new transacion")) {
+		guiEvents.push(new cEventMakeTsx);
+	}
+
 	ImGui::End();
 
 	//Rendering
@@ -282,6 +288,7 @@ void interfaseEventGenerator::printManageConnections(void) {
 				ip,
 				port
 				);
+			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup(); 
 		}
 		ImGui::SetItemDefaultFocus();
@@ -315,11 +322,91 @@ void interfaseEventGenerator::printManageConnections(void) {
 
 		if (ImGui::Button("OK", ImVec2(120, 0)) && checked) {
 			mySim->deleteConnection(currentNodes[checked]->getAddress(), keysVector[checkedCnx]);
+			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup();
 		}
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+		ImGui::EndPopup();
+	}
+
+	ImGui::End();
+
+	ImGui::Render();
+
+	al_clear_to_color(al_map_rgb(211, 211, 211));
+
+
+	ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
+
+
+	al_flip_display();
+}
+
+void interfaseEventGenerator::printMakeTsx(void) {
+	ImGui_ImplAllegro5_NewFrame();
+	ImGui::NewFrame();
+
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImVec2(SIZE_SCREEN_X, SIZE_SCREEN_X));
+
+	ImGui::Begin("EDAcoin", 0, 0);
+
+	static int checked = -1;
+
+	ImGui::BeginChild("Curr Nodes", ImVec2(300, 400), true, ImGuiWindowFlags_None);
+
+	for (int i = 0; i < currentNodes.size(); i++)
+	{
+		ImGui::RadioButton(currentNodes[i]->getAddress().c_str(), &checked, i);
+	}
+
+	ImGui::EndChild();
+
+	if (ImGui::Button("Cancel")) {
+		guiEvents.push(new cEventBack);
+	}	
+	
+	static vector<string> keysVector;
+
+	if (ImGui::Button("Make transaction") && checked != -1) {
+		ImGui::OpenPopup("Tsx");
+		map<string, boost::asio::ip::tcp::socket*> connectionsMap = currentNodes[checked]->getConnections();
+		for (map<string, boost::asio::ip::tcp::socket*>::iterator it = connectionsMap.begin(); it != connectionsMap.end(); ++it) {
+			keysVector.push_back(it->first);
+		}
+	}
+
+
+	if (ImGui::BeginPopupModal("Tsx", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::Text("Please select the target node's IP and port:\n\n");
+		ImGui::Separator();
+
+		static int checkedCnx = -1;
+
+		for (int i = 0; i < keysVector.size(); i++)
+		{
+			ImGui::RadioButton(keysVector[i].c_str(), &checkedCnx, i);
+		}
+
+		ImGui::Text("Please select the sizeof the transaction: ");
+		static int amount;
+		ImGui::InputInt("$", &amount);
+
+		if (ImGui::Button("OK", ImVec2(120, 0)) && checked) {
+			mySim->sendTransaction(currentNodes[checked]->getAddress(), keysVector[checkedCnx], amount);
+			ImGui::CloseCurrentPopup();
+			checkedCnx = -1;
+		}
+		ImGui::SetItemDefaultFocus();
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
+			ImGui::CloseCurrentPopup(); 
+			checkedCnx = -1;
+		}
 		ImGui::EndPopup();
 	}
 

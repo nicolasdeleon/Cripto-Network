@@ -34,8 +34,6 @@ protected:
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
 	MyClient client;
-
-private:
 	std::string createAddress(std::string ip, int port);
 	void listen_connection();
 	void answer(std::string incoming_address);
@@ -50,6 +48,7 @@ private:
 	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
 	void parseHtmlRequested();
 
+
 	std::string wrap_package(string json_string);
 
 	std::string html_requested;
@@ -63,6 +62,9 @@ private:
 	std::string address;
 	std::map<std::string, boost::asio::ip::tcp::socket*> connections;
 	std::string counter, block_id, path;
+
+	json blockChain;
+
 };
 
 
