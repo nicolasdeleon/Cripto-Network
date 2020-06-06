@@ -66,7 +66,7 @@ class interfaseEventGenerator : public eventGenerator
 	
 	private:
 
-	
+	std::vector<std::string> extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map);
 	queue <genericEvent*> guiEvents;
 	ALLEGRO_EVENT_QUEUE* alEventQueue;
 	ALLEGRO_DISPLAY* display;

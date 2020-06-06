@@ -50,6 +50,7 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_tx") {
+		cout << incoming_address << " $" << count << endl;
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_merkle_block") {
@@ -142,28 +143,27 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 
 void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amounts, vector<string> publicIds) {
 
-	json TX;
+	to_send.clear();
 	int nTxout = amounts.size();
 
 	if (amounts.size() == publicIds.size()) {
-		TX["nTxin"] = 1;
-		TX["nTxout"] = nTxout;
-		TX["txid"] = "7B857A14";
-		TX["vout"] = {};
-		for (int i = 0; i < nTxout; i++)
-		TX["vout"].push_back({{"amount", amounts[i]}, {"publicid", publicIds[i]}});
-		TX["vin"] = {};
-		TX["vin"].push_back({ { "blockid", "00000BDE" },
+		to_send["nTxin"] = 1;
+		to_send["nTxout"] = nTxout;
+		to_send["txid"] = "7B857A14";
+		to_send["vout"] = {};
+		for (int i = 0; i < nTxout; i++) {}
+		to_send["vin"] = {};
+		to_send["vin"].push_back({ { "blockid", "00000BDE" },
 			{ "outputIndex", 4 },
 			{ "signature", "000009B7" },
 			{ "txid", "00000EBA" } });
 	}
 	else{
 		//pifiaste mache
-		cout << "pifiaste, no me pasaste igual cant de amounts que publicIds";
+		to_send["loco"] = "pifiaste";
 	}
 	
-	client.methodPost(path, outIp, outPort, TX);
+	client.methodPost(path, outIp, outPort, to_send);
 }
 
 void FullNode::sendFilter(string path, string outIp, int outPort) {

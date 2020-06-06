@@ -56,7 +56,7 @@ protected:
 	boost::asio::ip::tcp::socket* handler_socket;
 	unsigned int port;
 	std::string ip;
-	std::string address;
+	//std::string address;
 	std::map<std::string, boost::asio::ip::tcp::socket*> connections;
 	
 	std::vector<std::string> permitedPaths;

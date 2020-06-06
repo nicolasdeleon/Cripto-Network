@@ -147,6 +147,7 @@ void interfaseEventGenerator::printMainMenu(void) {
 }
 
 void interfaseEventGenerator::printMakingNode(void) {
+	currentNodes = mySim->getNodes();
 	ImGui_ImplAllegro5_NewFrame();
 	ImGui::NewFrame();
 
@@ -174,20 +175,27 @@ void interfaseEventGenerator::printMakingNode(void) {
 		ImGui::Text("Please select the target node's IP and port:\n\n");
 		ImGui::Separator();
 
-		static char alias[25];
-		ImGui::InputText("Node alias", alias, sizeof(char) * 25);
-
-		static char ip[25];
-		ImGui::InputText("Node ip", ip, sizeof(char) * 25, ImGuiInputTextFlags_CharsDecimal);
-
 		static int port;
 		ImGui::InputInt("Node port", &port);
 
+		
+		static int NType = 0;
+
+		ImGui::RadioButton("Full Node", &NType, 0);
+		ImGui::RadioButton("SPV Node", &NType, 1);
+		
 		if (ImGui::Button("OK", ImVec2(120, 0))) {
-			mySim->addNode(ip, port, NodeType::FULL);
-			currentNodes = mySim->getNodes();
-			ImGui::CloseCurrentPopup();
+			if (!(port % 2)) {
+				mySim->addNodeAndStart("127.0.0.1", port, static_cast <NodeType>(NType));
+				currentNodes = mySim->getNodes();
+				ImGui::CloseCurrentPopup();
+			}
+			else {
+				port++;
+			}
 		}
+
+
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
@@ -230,6 +238,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 }
 
 void interfaseEventGenerator::printManageConnections(void) {
+	currentNodes = mySim->getNodes();
 	ImGui_ImplAllegro5_NewFrame();
 	ImGui::NewFrame();
 
@@ -286,14 +295,10 @@ void interfaseEventGenerator::printManageConnections(void) {
 		ImGui::EndPopup();
 	}
 	
-	static vector<string> keysVector;
+	
 
 	if (ImGui::Button("Delete connection") && checked != -1) {
 		ImGui::OpenPopup("Delete Connection");
-		map<string, boost::asio::ip::tcp::socket*> connectionsMap = currentNodes[checked]->getConnections();
-		for (map<string, boost::asio::ip::tcp::socket*>::iterator it = connectionsMap.begin(); it != connectionsMap.end(); ++it) {
-			keysVector.push_back(it->first);
-		}
 	}
 
 
@@ -301,6 +306,8 @@ void interfaseEventGenerator::printManageConnections(void) {
 	{
 		ImGui::Text("Please select the target node's IP and port:\n\n");
 		ImGui::Separator();
+
+		vector <string> keysVector = extract_keys(currentNodes[checked]->getConnections());
 
 		static int checkedCnx = -1;
 
@@ -314,6 +321,7 @@ void interfaseEventGenerator::printManageConnections(void) {
 			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup();
 		}
+
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
@@ -334,6 +342,8 @@ void interfaseEventGenerator::printManageConnections(void) {
 }
 
 void interfaseEventGenerator::printMakeTsx(void) {
+	currentNodes.clear();
+	currentNodes = mySim->getNodes();
 	ImGui_ImplAllegro5_NewFrame();
 	ImGui::NewFrame();
 
@@ -358,14 +368,9 @@ void interfaseEventGenerator::printMakeTsx(void) {
 		guiEvents.push(new cEventBack);
 	}	
 	
-	static vector<string> keysVector;
 
 	if (ImGui::Button("Make transaction") && checked != -1) {
 		ImGui::OpenPopup("Tsx");
-		map<string, boost::asio::ip::tcp::socket*> connectionsMap = currentNodes[checked]->getConnections();
-		for (map<string, boost::asio::ip::tcp::socket*>::iterator it = connectionsMap.begin(); it != connectionsMap.end(); ++it) {
-			keysVector.push_back(it->first);
-		}
 	}
 
 
@@ -374,6 +379,8 @@ void interfaseEventGenerator::printMakeTsx(void) {
 		ImGui::Text("Please select the target node's IP and port:\n\n");
 		ImGui::Separator();
 
+		vector <string> keysVector = extract_keys(currentNodes[checked]->getConnections());
+
 		static int checkedCnx = -1;
 
 		for (int i = 0; i < keysVector.size(); i++)
@@ -381,11 +388,12 @@ void interfaseEventGenerator::printMakeTsx(void) {
 			ImGui::RadioButton(keysVector[i].c_str(), &checkedCnx, i);
 		}
 
-		ImGui::Text("Please select the sizeof the transaction: ");
+		ImGui::Text("Please select the size of the transaction: ");
 		static int amount;
-		ImGui::InputInt("$", &amount);
+		ImGui::InputInt("EDA$", &amount);
 
-		if (ImGui::Button("OK", ImVec2(120, 0)) && checked) {
+		if (ImGui::Button("OK", ImVec2(120, 0)) && checkedCnx != -1) {
+			
 			mySim->sendTransaction(currentNodes[checked]->getAddress(), keysVector[checkedCnx], amount);
 			ImGui::CloseCurrentPopup();
 			checkedCnx = -1;
@@ -410,6 +418,14 @@ void interfaseEventGenerator::printMakeTsx(void) {
 
 
 	al_flip_display();
+}
+
+std::vector<std::string> interfaseEventGenerator::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
+	std::vector<std::string> retval;
+	for (auto const& element : input_map) {
+		retval.push_back(element.first);
+	}
+	return retval;
 }
 
 

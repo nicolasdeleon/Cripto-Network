@@ -149,9 +149,12 @@ void Simulation::sendTransaction(string origin_adress, string target_adress, int
 	int port = stoi(target_adress.substr(target_adress.find(":") + 1));
 	string ip = target_adress.substr(0, target_adress.find(":"));
 	
+	cout << target_adress << " " << amount;
+
 	for (GenericNode* node : Nodes) {
 		if (node->getAddress() == origin_adress) {
-			static_cast<FullNode*>(node)->sendTX("send_tx", ip, port, { amount }, { "32423" });;
+			static_cast<FullNode*>(node)->sendTX("send_tx", ip, port, { amount }, { "32423" });
+			
 		}
 	}
 }

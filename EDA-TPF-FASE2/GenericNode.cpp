@@ -19,7 +19,7 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	port(port),
 	ip(ip),
 	client(ip, port+1),
-	address(createAddress(ip, port)),
+	/*address(createAddress(ip, port)),*/
 	handler_socket(nullptr),
 	permitedPaths(AMOUNT_OF_PATHS)
 {
@@ -59,7 +59,7 @@ string GenericNode::getIP() {
 }
 
 string GenericNode::getAddress() {
-	return address;
+	return createAddress(ip, port);
 }
 
 void GenericNode::setPort(unsigned int PORT) {
@@ -130,31 +130,36 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 	unsigned int port = handler_socket->remote_endpoint().port();
 	std::cout << ip << " ";
 	std::cout << port << std::endl;
-	address = createAddress(ip, port-1);
-	std::cout << address << endl;
+	string inc_address = createAddress(ip, port-1);
+	std::cout << "incoming adress "<< inc_address << endl;
 
 	// Checkeo que la conexion sea de un puerto de mi red
-	if (connections.find(address) != connections.end()) {
+	if (connections.find(inc_address) != connections.end()) {
 		// creo un socket y lo coloco en mis connecciones, expandoe l tama�o de mi vector de request
 		boost::asio::ip::tcp::socket* socket = handler_socket;
-		connections[address] = socket;
-		requests[address].resize(REQUEST_BUFFER_LENGTH);
+		connections[inc_address] = socket;
+		requests[inc_address].resize(REQUEST_BUFFER_LENGTH);
 	}
 	else {
-		cout << "Nodo al que se le quire hablar no esta conectado al nodo saliente. ¿Falto cargarlo?" << endl;
+		addConnection(inc_address);
+		/*cout << "Nodo al que se le quire hablar no esta conectado al nodo saliente. ¿Falto cargarlo?" << endl;
 		shut_down_reciever_socket(); // para poder recibir otras conexiones
-		listen_connection();
-		return;
+		listen_connection();*/
+		boost::asio::ip::tcp::socket* socket = handler_socket;
+		connections[inc_address] = socket;
+		requests[inc_address].resize(REQUEST_BUFFER_LENGTH);
 	}
 
 	listen_connection();
 
 	if (!error) {
-		read(address);
+		read(inc_address);
 	}
 	else {
 		std::cout << error.message() << std::endl;
 	}
+
+	return;
 }
 
 
@@ -174,7 +179,7 @@ void GenericNode::answer(string incoming_address)
 		);
 	}
 	else {
-		cout << "Nada cargado en answer" << " // " << "Pedido de " << incoming_address << " a nodo " << address;
+		cout << "Nada cargado en answer" << " // " << "Pedido de " << incoming_address << " a nodo " << createAddress(ip, port);
 		shutdown_socket_for_connection(incoming_address);
 		listen_connection();
 	}
@@ -262,6 +267,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		// Node can handle request ?
 	if (std::find(permitedPaths.begin(), permitedPaths.end(), path_requested) != permitedPaths.end())
 	{
+
 		dispatch_response(path_requested, incoming_address, block_id, count);
 		// TODO: handleRequest() hago lo que tenga que hacer con POST_requestJSON
 	}
