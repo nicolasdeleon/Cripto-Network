@@ -7,8 +7,12 @@
 #include <vector>
 #include "MyClient.h"
 
+
 #define REQUEST_BUFFER_LENGTH 700
 #define AMOUNT_OF_PATHS 5
+
+enum class NodeType { FULL, SPV };
+
 
 using message_id = unsigned int;
 enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };
@@ -29,6 +33,8 @@ public:
 	void setPort(unsigned int PORT = 80);
 	void curlPoll();
 	string getClientRequestAnswer();
+	NodeType getType();
+
 
 protected:
 	std::string createAddress(std::string ip, int port);
@@ -46,6 +52,8 @@ protected:
 	string parseEndPoint(char* str);
 	unsigned int parseBlockId(char* str);
 	unsigned int parseCount(char* str);
+
+	NodeType type;
 
 	std::string wrap_package(string json_string);
 

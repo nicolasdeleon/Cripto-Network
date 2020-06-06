@@ -6,7 +6,7 @@
 #include <vector>
 
 using namespace std;
-enum class NodeType { FULL, SPV };
+
 
 class Simulation {
 public:

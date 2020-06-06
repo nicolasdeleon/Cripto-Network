@@ -378,3 +378,9 @@ unsigned int GenericNode::parseCount(char* str)
 string GenericNode::getClientRequestAnswer() {
 	return client.getAnswer();
 }
+
+NodeType GenericNode::getType()
+{
+	return type;
+	return NodeType();
+}

@@ -14,6 +14,8 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	permitedPaths.push_back("/eda_coin/send_filter");
 	permitedPaths.push_back("/eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_block_header");
+
+	type = NodeType::FULL;
 }
 
 // Funcion para enviar pedido desde el nodo Full
