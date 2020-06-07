@@ -80,43 +80,34 @@ int main(int argc, char** argv)
 
 
 	srand(time(NULL));
+
+	json creador;
+	//esta parte de importar al json habria que hacerla desde la gui como en el tp1 que te daba la direccion de la carpeta y te cargaba el json que querias
+
+	string str = "jsoncreacion.json";
 	
-	
-	
-	
-	//esta parte revisar despues para cargar el json creo que el problema es el formato del json que cree habria que pedirle a nico o lucas un json que funcione para crearlo.
+	//Abro el archivo y lo asigno a mi variable miembro blocks (de tipo json)
+	ifstream blocks_file(str, ifstream::binary);
 
-	//json creador;
-	////esta parte de importar al json habria que hacerla desde la gui como en el tp1 que te daba la direccion de la carpeta y te cargaba el json que querias
+	blocks_file >> creador;
+	if (!creador.empty()) 
+	{	
+		for (int i = 0; i < creador["full-nodes"].size(); i++)
+		{
+			//cout << creador["full-nodes"][i];
+			sim.addNode("127.0.0.1", creador["full-nodes"][i], NodeType::FULL);
+		}
+	}
 
-	//string str = "json_creacion.json";
-	//
-	////Abro el archivo y lo asigno a mi variable miembro blocks (de tipo json)
-	//ifstream blocks_file(str, ifstream::binary);
-
-	//blocks_file >> creador;
-	//if (!creador.empty()) 
-	//{	
-	//	for (int i = 0; i < creador[0].size(); i++)
-	//	{
-	//		cout << creador[0][i];
-	//		//sim.addNode("127.0.0.1", creador[0][i], NodeType::FULL);
-	//	}
-	//}
-
-
-
-
-	
 	/* Esto serian configuraciones cuando se cargan todos los nodos */
 	//sim.addNode("127.0.0.1", 80, NodeType::SPV);
 
-	sim.addNode("127.0.0.1", 10, NodeType::FULL);
+	/*sim.addNode("127.0.0.1", 10, NodeType::FULL);
 	sim.addNode("127.0.0.1", 20, NodeType::FULL);
 	sim.addNode("127.0.0.1", 30, NodeType::FULL);
 	sim.addNode("127.0.0.1", 40, NodeType::FULL);
 	sim.addNode("127.0.0.1", 50, NodeType::FULL);
-	sim.addNode("127.0.0.1", 60, NodeType::FULL);
+	sim.addNode("127.0.0.1", 60, NodeType::FULL);*/
 
 	/*sim.createConnection("127.0.0.1", 80, "127.0.0.1", 8080);
 	sim.createConnection("127.0.0.1", 8080, "127.0.0.1", 80);*/
