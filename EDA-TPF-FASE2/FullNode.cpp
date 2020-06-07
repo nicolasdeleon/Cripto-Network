@@ -3,8 +3,10 @@
 #include <sstream>
 #include <iomanip>
 #include <stdio.h>
+#include <stdlib.h>
 
-
+void createConection(string& origin_address, string& destiny_address, vector<GenericNode*>& Nodes);
+void visitar(int nodo_a_visitar, vector<NodeInfo>& PingedNodes);
 
 FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
@@ -14,7 +16,6 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	permitedPaths.push_back("/eda_coin/send_filter");
 	permitedPaths.push_back("/eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_block_header");
-
 	type = NodeType::FULL;
 }
 
@@ -168,6 +169,8 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 	client.methodPost(path, outIp, outPort, to_send);
 }
 
+
+
 void FullNode::sendFilter(string path, string outIp, int outPort) {
 	json temp;
 	temp["Key"] = "Node 1";
@@ -315,3 +318,112 @@ vector<string> FullNode::makeMerklePath(int blockNumber, string txid) {
 	return merklePath;
 }
 
+
+
+void FullNode::algoritmoParticular(vector<GenericNode*>& Nodes)
+{
+	for (int num_nodo = 0 ; num_nodo < PingedNodes.size(); num_nodo++ )
+	{
+		//imprimo un aviso nomas
+		if (PingedNodes[num_nodo].connections >= 2)
+		{
+			cout << "A este nodo no lo conecto con nadie porque ya tiene 2 conexiones" << endl;
+		}
+		else
+		{
+			//imprimo un aviso nomas
+			if (PingedNodes[num_nodo].connections == 1)
+			{
+				cout << "A este nodo lo conectare una unica vez ya que tiene una conexion" << endl;
+			}
+			//hago las conexiones hasta que el numero de conexiones sea 2 
+			while (PingedNodes[num_nodo].connections < 2)
+			{
+				int node_to_connect;
+				bool already_conected;
+				//le doy un numero arbitrario que no sea justo su mismo numero para evitar que se conecte consigo mismo, ni tampoco sea una conexion que ya se establecio.
+				do{
+					already_conected = false;
+					node_to_connect = rand() % PingedNodes.size() + 0;
+					for (int i = 0; i < PingedNodes[num_nodo].conectedWith.size(); i++)
+					{
+						if (node_to_connect == PingedNodes[num_nodo].conectedWith[i])
+						{
+							already_conected = true;
+						}
+					}
+				} while (num_nodo == node_to_connect || already_conected == true);
+
+				//creo las direcciones de salida y llegada de la conexion
+				string origin_address = createAddress(PingedNodes[num_nodo].ip, PingedNodes[num_nodo].puerto);
+				string destiny_address = createAddress(PingedNodes[node_to_connect].ip, PingedNodes[node_to_connect].puerto);
+				createConection(origin_address, destiny_address, Nodes);
+				PingedNodes[num_nodo].conectedWith.push_back(node_to_connect);
+				//invierto el orden de las direcciones para que la comunicacion se establezca en el sentido inverso tambien.
+				createConection(destiny_address, origin_address, Nodes);
+				PingedNodes[node_to_connect].conectedWith.push_back(num_nodo);
+				//imprimo un aviso nomas
+				cout << "A este nodo (el nodo num:" <<num_nodo << ") lo conecto con: " << node_to_connect << endl;
+				//aumento el contador de conexiones de ambos nodos.
+				PingedNodes[num_nodo].connections++;
+				PingedNodes[node_to_connect].connections++;
+			}
+		}
+	}
+	//compruebo que sea conexo el grafo
+	if (es_conexo())
+	{
+		cout << "Es conexo" << endl;
+	}
+	else
+	{
+		cout << "No es conexo" << endl;
+	}
+	
+}
+
+
+bool FullNode::es_conexo(void)
+{
+	
+	/*for (int i = 0; i < PingedNodes.size(); i++)
+	{
+		for (int j = 0; j < PingedNodes[i].conectedWith.size(); j++)
+		{
+			cout << PingedNodes[i].conectedWith[j] << endl;
+		}
+	}*/
+
+	//algoritmo para revisar si es conexo.
+	//empiezo en nodo 0
+	visitar(0, PingedNodes);
+	for (int i = 0; i < PingedNodes.size(); i++)
+	{
+		if (PingedNodes[i].visitado == false)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void createConection(string& origin_address, string& destiny_address, vector<GenericNode*>& Nodes)
+{
+	for (GenericNode* node : Nodes) {
+		if (node->getAddress() == origin_address) {
+			node->addConnection(destiny_address);
+		}
+	}
+}
+
+void visitar(int nodo_a_visitar, vector<NodeInfo>& PingedNodes)
+{
+	if (PingedNodes[nodo_a_visitar].visitado == false)
+	{
+		PingedNodes[nodo_a_visitar].visitado = true;
+		for (int i = 0; i < PingedNodes[nodo_a_visitar].conectedWith.size(); i++)
+		{
+			visitar(PingedNodes[nodo_a_visitar].conectedWith[i], PingedNodes);
+		}
+	}
+}

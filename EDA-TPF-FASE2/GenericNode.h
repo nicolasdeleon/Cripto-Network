@@ -13,6 +13,13 @@
 
 enum class NodeType { FULL, SPV };
 
+typedef struct nodeInfo {
+	string ip;
+	int puerto;
+	int connections = 0;
+	bool visitado = false;
+	vector<int> conectedWith;
+} NodeInfo;
 
 using message_id = unsigned int;
 enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };
@@ -29,12 +36,13 @@ public:
 	std::string getIP();
 	std::string getAddress();
 	boost::asio::io_context& getNodeIoContext();
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id = 0, unsigned int cant = 0) = 0;
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id = 0, unsigned int cant = 0)=0;
 	void setPort(unsigned int PORT = 80);
 	void curlPoll();
 	string getClientRequestAnswer();
 	NodeType getType();
-
+	//virtual void algoritmoParticular(void);
+	vector<NodeInfo> PingedNodes;
 
 protected:
 	std::string createAddress(std::string ip, int port);
@@ -52,7 +60,6 @@ protected:
 	string parseEndPoint(char* str);
 	unsigned int parseBlockId(char* str);
 	unsigned int parseCount(char* str);
-
 	NodeType type;
 
 	std::string wrap_package(string json_string);
