@@ -3,9 +3,11 @@
 SPVNode::SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
 	permitedPaths.push_back("/eda_coin/send_merkle_block");
+
+	type = NodeType::SPV;
 }
 
-
+// Funcion que envia un request desde el nodo SPV
 void SPVNode::send_request(
 	MessageIds id, 
 	string ip, 
@@ -27,7 +29,25 @@ void SPVNode::send_request(
 	}
 }
 
+// Funcion que responde a un pedido desde el nodo SPV
+void SPVNode::dispatch_response(string path, string incoming_address, unsigned int block_id, unsigned int count) {
+	std::cout << "response_dispatch()" << std::endl;
 
+	json response;
+
+	response["status"] = "true";
+
+	if (path == "/eda_coin/send_merkle_block") {
+		response["result"] = "null";
+	}
+	else {
+		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
+	}
+
+	std::cout << "Respuesta del servidor al pedido:" << endl << response.dump() << std::endl;
+	answers[incoming_address] = wrap_package(response.dump());
+
+}
 
 SPVNode::~SPVNode() {
 

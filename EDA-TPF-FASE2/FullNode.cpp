@@ -3,8 +3,10 @@
 #include <sstream>
 #include <iomanip>
 #include <stdio.h>
+#include <stdlib.h>
 
-
+void createConection(string& origin_address, string& destiny_address, vector<GenericNode*>& Nodes);
+void visitar(int nodo_a_visitar, vector<NodeInfo>& PingedNodes);
 
 FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
@@ -14,9 +16,10 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	permitedPaths.push_back("/eda_coin/send_filter");
 	permitedPaths.push_back("/eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_block_header");
+	type = NodeType::FULL;
 }
 
-
+// Funcion para enviar pedido desde el nodo Full
 void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant) {
 
 	switch (id) {
@@ -38,6 +41,81 @@ void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, js
 	}
 }
 
+// Funcion que responde a un pedido desde el nodo Full
+void FullNode::dispatch_response(string path, string incoming_address, unsigned int block_id, unsigned int count) {
+	std::cout << "response_dispatch()" << std::endl;
+
+	json response;
+
+	response["status"] = "true";
+
+	if (path == "/eda_coin/send_block") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/send_tx") {
+		cout << incoming_address << " $" << count << endl;
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/send_merkle_block") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/send_filter") {
+		response["result"] = "null";
+	}
+	else if (path == "/eda_coin/get_blocks") {
+		int blocks_left = 0;
+		bool allOk = false;
+		for (auto block : blockChain) {
+			if (block["blockid"] == block_id) {
+				allOk = true;
+				blocks_left = count--;
+				response["result"].push_back(block);
+			}
+			else if (blocks_left) {
+				blocks_left--;
+				response["result"].push_back(block);
+			}
+		}
+
+		if (allOk = false || blocks_left) {
+			response.clear();
+			response["status"] = false;
+			response["result"] = 2;
+		}
+	}
+	else if (path == "/eda_coin/get_block_header") {
+		bool allOk = false;
+		if (blockChain.size()) {
+			for (auto block : blockChain) {
+				if (block["blockid"] == block_id) {
+					allOk = true;
+					response["result"]["blockid"] = block["blockid"];
+					response["result"]["height"] = block["height"];
+					response["result"]["merkleroot"] = block["merkleroot"];
+					response["result"]["nTx"] = block["nTx"];
+					response["result"]["nonce"] = block["nonce"];
+					response["result"]["previousblockid"] = block["previousblockid"];
+				}
+			}
+			if (!allOk) {
+				response.clear();
+				response["status"] = false;
+				response["result"] = 2;
+			}
+		}
+		else {
+			response.clear();
+			response["status"]["blockid"] = "00000000";
+		}
+	}
+	else {
+		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
+	}
+
+	std::cout << "Respuesta del servidor al pedido:" << endl << response.dump() << std::endl;
+	answers[incoming_address] = wrap_package(response.dump());
+
+}
 
 FullNode::~FullNode() {
 }
@@ -58,9 +136,7 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 			}
 		}
 		else {
-			//pifiaste mache
-			//to_send.clear();
-			cout << "pifiaste, no existe el blockid seleccionado";
+			cout << "No existe el blockid seleccionado";
 		}
 	}
 
@@ -70,29 +146,30 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 
 void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amounts, vector<string> publicIds) {
 
-	json TX;
+	to_send.clear();
 	int nTxout = amounts.size();
 
 	if (amounts.size() == publicIds.size()) {
-		TX["nTxin"] = 1;
-		TX["nTxout"] = nTxout;
-		TX["txid"] = "7B857A14";
-		TX["vout"] = {};
-		for (int i = 0; i < nTxout; i++)
-		TX["vout"].push_back({{"amount", amounts[i]}, {"publicid", publicIds[i]}});
-		TX["vin"] = {};
-		TX["vin"].push_back({ { "blockid", "00000BDE" },
+		to_send["nTxin"] = 1;
+		to_send["nTxout"] = nTxout;
+		to_send["txid"] = "7B857A14";
+		to_send["vout"] = {};
+		for (int i = 0; i < nTxout; i++) {}
+		to_send["vin"] = {};
+		to_send["vin"].push_back({ { "blockid", "00000BDE" },
 			{ "outputIndex", 4 },
 			{ "signature", "000009B7" },
 			{ "txid", "00000EBA" } });
 	}
 	else{
 		//pifiaste mache
-		cout << "pifiaste, no me pasaste igual cant de amounts que publicIds";
+		to_send["loco"] = "pifiaste";
 	}
 	
-	client.methodPost(path, outIp, outPort, TX);
+	client.methodPost(path, outIp, outPort, to_send);
 }
+
+
 
 void FullNode::sendFilter(string path, string outIp, int outPort) {
 	json temp;
@@ -241,3 +318,112 @@ vector<string> FullNode::makeMerklePath(int blockNumber, string txid) {
 	return merklePath;
 }
 
+
+
+void FullNode::algoritmoParticular(vector<GenericNode*>& Nodes)
+{
+	for (int num_nodo = 0 ; num_nodo < PingedNodes.size(); num_nodo++ )
+	{
+		//imprimo un aviso nomas
+		if (PingedNodes[num_nodo].connections >= 2)
+		{
+			cout << "A este nodo no lo conecto con nadie porque ya tiene 2 conexiones" << endl;
+		}
+		else
+		{
+			//imprimo un aviso nomas
+			if (PingedNodes[num_nodo].connections == 1)
+			{
+				cout << "A este nodo lo conectare una unica vez ya que tiene una conexion" << endl;
+			}
+			//hago las conexiones hasta que el numero de conexiones sea 2 
+			while (PingedNodes[num_nodo].connections < 2)
+			{
+				int node_to_connect;
+				bool already_conected;
+				//le doy un numero arbitrario que no sea justo su mismo numero para evitar que se conecte consigo mismo, ni tampoco sea una conexion que ya se establecio.
+				do{
+					already_conected = false;
+					node_to_connect = rand() % PingedNodes.size() + 0;
+					for (int i = 0; i < PingedNodes[num_nodo].conectedWith.size(); i++)
+					{
+						if (node_to_connect == PingedNodes[num_nodo].conectedWith[i])
+						{
+							already_conected = true;
+						}
+					}
+				} while (num_nodo == node_to_connect || already_conected == true);
+
+				//creo las direcciones de salida y llegada de la conexion
+				string origin_address = createAddress(PingedNodes[num_nodo].ip, PingedNodes[num_nodo].puerto);
+				string destiny_address = createAddress(PingedNodes[node_to_connect].ip, PingedNodes[node_to_connect].puerto);
+				createConection(origin_address, destiny_address, Nodes);
+				PingedNodes[num_nodo].conectedWith.push_back(node_to_connect);
+				//invierto el orden de las direcciones para que la comunicacion se establezca en el sentido inverso tambien.
+				createConection(destiny_address, origin_address, Nodes);
+				PingedNodes[node_to_connect].conectedWith.push_back(num_nodo);
+				//imprimo un aviso nomas
+				cout << "A este nodo (el nodo num:" <<num_nodo << ") lo conecto con: " << node_to_connect << endl;
+				//aumento el contador de conexiones de ambos nodos.
+				PingedNodes[num_nodo].connections++;
+				PingedNodes[node_to_connect].connections++;
+			}
+		}
+	}
+	//compruebo que sea conexo el grafo
+	if (es_conexo())
+	{
+		cout << "Es conexo" << endl;
+	}
+	else
+	{
+		cout << "No es conexo" << endl;
+	}
+	
+}
+
+
+bool FullNode::es_conexo(void)
+{
+	
+	/*for (int i = 0; i < PingedNodes.size(); i++)
+	{
+		for (int j = 0; j < PingedNodes[i].conectedWith.size(); j++)
+		{
+			cout << PingedNodes[i].conectedWith[j] << endl;
+		}
+	}*/
+
+	//algoritmo para revisar si es conexo.
+	//empiezo en nodo 0
+	visitar(0, PingedNodes);
+	for (int i = 0; i < PingedNodes.size(); i++)
+	{
+		if (PingedNodes[i].visitado == false)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+void createConection(string& origin_address, string& destiny_address, vector<GenericNode*>& Nodes)
+{
+	for (GenericNode* node : Nodes) {
+		if (node->getAddress() == origin_address) {
+			node->addConnection(destiny_address);
+		}
+	}
+}
+
+void visitar(int nodo_a_visitar, vector<NodeInfo>& PingedNodes)
+{
+	if (PingedNodes[nodo_a_visitar].visitado == false)
+	{
+		PingedNodes[nodo_a_visitar].visitado = true;
+		for (int i = 0; i < PingedNodes[nodo_a_visitar].conectedWith.size(); i++)
+		{
+			visitar(PingedNodes[nodo_a_visitar].conectedWith[i], PingedNodes);
+		}
+	}
+}

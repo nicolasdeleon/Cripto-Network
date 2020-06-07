@@ -6,7 +6,7 @@
 #include <vector>
 
 using namespace std;
-enum class NodeType { FULL, SPV };
+
 
 class Simulation {
 public:
@@ -26,11 +26,11 @@ public:
 	void startNodes();
 	void doNodePolls();
 	vector<GenericNode*> getNodes();
+	string getRequestAnswer(string address);
+	vector<GenericNode*> Nodes;
 	~Simulation();
 private:
 	string createAddress(string ip, int port);
-
-	vector<GenericNode*> Nodes;
 	vector<boost::asio::io_context*> contexts;
 };
 
