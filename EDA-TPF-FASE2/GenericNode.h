@@ -22,7 +22,7 @@ typedef struct nodeInfo {
 } NodeInfo;
 
 using message_id = unsigned int;
-enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };
+enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER, PING };
 
 class GenericNode {
 public:
@@ -42,7 +42,7 @@ public:
 	string getClientRequestAnswer();
 	NodeType getType();
 	//virtual void algoritmoParticular(void);
-	vector<NodeInfo> PingedNodes;
+	virtual void doPolls() = 0;
 
 protected:
 	std::string createAddress(std::string ip, int port);

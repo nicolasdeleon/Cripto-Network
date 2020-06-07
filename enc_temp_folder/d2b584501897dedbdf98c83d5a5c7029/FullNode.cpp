@@ -137,15 +137,14 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 			response["status"] = "NETWORK_READY";
 			currState = NodeState::NETW_CREATED;
 			algoritmoParticular();
+			//addConnection(incoming_address);
+			//Cambiar el estado a algoritmo particularr y agregar como vecino
 			break;
 		case NodeState::WAITING_NETW_LAYOUT:
 			response["status"] = "NETWORK_READY";
-		}	
-	}
-	else if (path == "/eda_coin/NETWORK_LAYOUT") {
-		if (currState == NodeState::WAITING_NETW_LAYOUT) {
-			response["status"] = "null";
+			//agregar como vecino
 		}
+		
 	}
 	else {
 		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;

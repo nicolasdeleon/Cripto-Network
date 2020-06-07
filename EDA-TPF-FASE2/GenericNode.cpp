@@ -168,8 +168,7 @@ void GenericNode::answer(string incoming_address)
 	std::cout << "answer()" << std::endl;
 	if (answers[incoming_address] != "") {
 
-		cout << "Estoy mandando esto: " << endl;
-		cout << answers[incoming_address] << endl;
+		cout << "Estoy mandando a " << incoming_address << endl;
 		boost::asio::async_write(
 			*(connections[incoming_address]),
 			boost::asio::buffer(answers[incoming_address]),
@@ -247,6 +246,9 @@ bool GenericNode::parse_request(string incoming_address) {
 
 		// get POST json
 		int j = mystring.find('{');
+		if (j == string::npos) {
+			j = mystring.find("null");
+		}
 		if (j != string::npos)
 			while (mystring[j] != '\0') {
 				POST_request += mystring[j];
@@ -285,12 +287,12 @@ bool GenericNode::parse_request(string incoming_address) {
 
 void GenericNode::message_received_cb(const boost::system::error_code& error, size_t bytes_sent, string incoming_address) {
 
-	std::cout << "message_received_cb()" << std::endl;
+	//std::cout << "message_received_cb()" << std::endl;
 	if (!error) {
-		std::cout << "Response correctly received. " << bytes_sent << " bytes." << std::endl;
+		//std::cout << "Response correctly received. " << bytes_sent << " bytes." << std::endl;
 	}
 	else {
-		std::cout << bytes_sent << " bytes." << std::endl;
+		//std::cout << bytes_sent << " bytes." << std::endl;
 	}
 
 	// DEBUG INFO RECIEVED

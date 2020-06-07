@@ -128,6 +128,7 @@ void MyClient::configuratePOSTClient(int out_port, json& to_send) {
 	curl_easy_setopt(handler, CURLOPT_WRITEDATA, &answer);
 }
 
+
 bool MyClient::performRequest(void)
 {
 	if (recibiendoInfo) {
@@ -142,14 +143,19 @@ bool MyClient::performRequest(void)
 			curl_easy_cleanup(handler);
 			curl_multi_cleanup(multiHandler);
 			janswer = json::parse(answer);
-			answer = "";		
+			answer = "";
 	}
-
+	
 	return true;
 }
 
-string MyClient::getAnswer() {
-	return janswer.dump();
+bool MyClient::waiting4response()
+{
+	return recibiendoInfo;
+}
+
+json MyClient::getAnswer() {
+	return janswer;
 }
 
 

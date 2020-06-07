@@ -49,6 +49,11 @@ void SPVNode::dispatch_response(string path, string incoming_address, unsigned i
 
 }
 
+void SPVNode::doPolls() {
+	getNodeIoContext().poll();
+	curlPoll();
+}
+
 SPVNode::~SPVNode() {
 
 }
