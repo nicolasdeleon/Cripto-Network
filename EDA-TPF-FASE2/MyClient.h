@@ -24,7 +24,9 @@ public:
 	void methodGet(string _path, string out_ip, int out_port, string block_id, int count);
 	void methodPost(string _path, string out_ip, int out_port, json& to_send);
 	bool performRequest(void);
-	string getAnswer();
+	bool waiting4response();
+	json getAnswer();
+	void clearAnswer();
 	~MyClient();
 
 private:

@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 	json creador;
 	//esta parte de importar al json habria que hacerla desde la gui como en el tp1 que te daba la direccion de la carpeta y te cargaba el json que querias
 
-	string str = "jsoncreacion.json";
+	string str = "json_creacion.json";
 	
 	//Abro el archivo y lo asigno a mi variable miembro blocks (de tipo json)
 	ifstream blocks_file(str, ifstream::binary);
@@ -92,40 +92,36 @@ int main(int argc, char** argv)
 	blocks_file >> creador;
 	if (!creador.empty()) 
 	{	
-		for (int i = 0; i < creador["full-nodes"].size(); i++)
-		{
-			//cout << creador["full-nodes"][i];
-			sim.addNode("127.0.0.1", creador["full-nodes"][i], NodeType::FULL);
+		for (string node : creador["full-nodes"]) {
+			
+			sim.addNode("127.0.0.1", stoi(node), NodeType::FULL);
+		}
+		for (string node : creador["spv"]) {
+
+			sim.addNode("127.0.0.1", stoi(node), NodeType::SPV);
+		}
+		for (auto node : sim.Nodes) {
+			vector<string> addresses = creador["full-nodes"];
+			node->giveAvailableNodes(addresses);
 		}
 	}
 
-	/* Esto serian configuraciones cuando se cargan todos los nodos */
-	//sim.addNode("127.0.0.1", 80, NodeType::SPV);
 
-	/*sim.addNode("127.0.0.1", 10, NodeType::FULL);
-	sim.addNode("127.0.0.1", 20, NodeType::FULL);
-	sim.addNode("127.0.0.1", 30, NodeType::FULL);
-	sim.addNode("127.0.0.1", 40, NodeType::FULL);
-	sim.addNode("127.0.0.1", 50, NodeType::FULL);
-	sim.addNode("127.0.0.1", 60, NodeType::FULL);*/
-
-	/*sim.createConnection("127.0.0.1", 80, "127.0.0.1", 8080);
-	sim.createConnection("127.0.0.1", 8080, "127.0.0.1", 80);*/
 	// terminar las configs con un startNodes()
 	sim.startNodes();
-	guiEvGen.linkSimulation(&sim); // kjjjjj pero mirá lo que es esta turbiedad de código, para tener comunicación entre mi set de nodos y la gui :P
+
+
+	guiEvGen.linkSimulation(&sim);
 	/* Esto serian configuraciones pre iniciar el programa */
-	//json myj;
-	//string mi_campo = "mi-campo";
-	//string hola = "hola";
-	//myj[mi_campo] = "hola";
-	//sim.sendMessageFromNode2Node("127.0.0.1", 80, "127.0.0.1", 8080, MessageIds::TRANSACTION, myj, 15, 3);
+
 	
 
 	//aqui llamo a mi nodo central para que empiece a hacer la funcion algoritmoparticular que esta en full node.
 	//asumo que el nodo 1 (el del puerto 10) es el nodo que invoca este algoritmo.
 	
 	//toda esta primer parte es para elegir un nodo en el arreglo que sea full ver si es necesario despues en la implementacion de esto.
+	
+	/*
 	int Num_nodo = -1;
 	for (int i=0; i<sim.Nodes.size();i++)
 	{
@@ -141,9 +137,7 @@ int main(int argc, char** argv)
 	{
 		//pongo el mismo nodo como pingeado en la lista de pingeados
 		NodeInfo node;
-		node.ip = sim.Nodes[Num_nodo]->getIP();
-		node.puerto = sim.Nodes[Num_nodo]->getPort();
-		(*sim.Nodes[Num_nodo]).PingedNodes.push_back(node);
+
 		
 		//pongo los pingeados en el vector de pingeados
 		for (int i = 0; i < 4; i++)
@@ -152,18 +146,19 @@ int main(int argc, char** argv)
 			{
 				node.ip = sim.Nodes[i]->getIP();
 				node.puerto = sim.Nodes[i]->getPort();
-				(*sim.Nodes[Num_nodo]).PingedNodes.push_back(node);
+				FullNode* nodoTemp = dynamic_cast<FullNode*>(sim.Nodes[Num_nodo]);
+				(*nodoTemp).pingedNodes.push_back(node);
 			}
 		}
-		((FullNode*)(sim.Nodes[Num_nodo]))->algoritmoParticular(sim.Nodes);
+		((FullNode*)(sim.Nodes[Num_nodo]))->algoritmoParticular();
 		//ahora que tengo la lista con los pingednodes cargados empiezo a hacer el algoritmo propiamente dicho
 	}
 	else
 	{
 		cout << "no encontre ningun nodo full ocurrio un problema" << endl;
 	}
-
-
+	*/
+	
 
 
 	bool quit = false;
@@ -171,9 +166,8 @@ int main(int argc, char** argv)
 	
 	do
 	{
-		genericEvent * ev;
-		ev = eventGen.getNextEvent();
-		sim.doNodePolls();
+		genericEvent * ev = eventGen.getNextEvent();
+
 		/*
 		if (showOnce && sim.getRequestAnswer("127.0.0.1:80").size() != 0) {
 			cout << "Answer from 8080: " << sim.getRequestAnswer("127.0.0.1:80") << std::endl;
@@ -185,8 +179,10 @@ int main(int argc, char** argv)
 			{
 				quit = true;
 			}
-			else
+			else {
+				sim.doNodePolls();
 				fsm.cycle(ev);
+			}
 			delete ev;
 		}
 	} 
