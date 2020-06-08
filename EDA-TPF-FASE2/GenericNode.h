@@ -43,8 +43,10 @@ public:
 	NodeType getType();
 	//virtual void algoritmoParticular(void);
 	virtual void doPolls() = 0;
+	void giveAvailableNodes(vector<string>& genesisNodes);
 
 protected:
+	vector<string> genesisNodes;
 	std::string createAddress(std::string ip, int port);
 	void listen_connection();
 	void answer(std::string incoming_address);
@@ -61,6 +63,8 @@ protected:
 	unsigned int parseBlockId(char* str);
 	unsigned int parseCount(char* str);
 	NodeType type;
+
+	json incoming_json;
 
 	std::string wrap_package(string json_string);
 

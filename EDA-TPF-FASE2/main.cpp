@@ -105,7 +105,13 @@ int main(int argc, char** argv)
 
 			sim.addNode("127.0.0.1", stoi(node), NodeType::SPV);
 		}
+		for (auto node : sim.Nodes) {
+			vector<string> addresses = creador["full-nodes"];
+			node->giveAvailableNodes(addresses);
+		}
 	}
+
+
 	// terminar las configs con un startNodes()
 	sim.startNodes();
 
@@ -178,9 +184,10 @@ int main(int argc, char** argv)
 			{
 				quit = true;
 			}
-			else
+			else {
 				sim.doNodePolls();
 				fsm.cycle(ev);
+			}
 			delete ev;
 		}
 	} 

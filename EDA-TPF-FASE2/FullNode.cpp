@@ -17,6 +17,7 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	permitedPaths.push_back("/eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_block_header");
 	permitedPaths.push_back("/eda_coin/PING");
+	permitedPaths.push_back("/eda_coin/NETWORK_LAYOUT");
 
 	type = NodeType::FULL;
 
@@ -30,7 +31,7 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	queue = al_create_event_queue();	
 	timer = al_create_timer(0.01);
 	al_register_event_source(queue, al_get_timer_event_source(timer));
-	int i = (rand() % 900) + 10;
+	int i = (rand() % 990) + 10;
 	countdown = 10 * i;
 	al_start_timer(timer);
 
@@ -140,11 +141,23 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 			break;
 		case NodeState::WAITING_NETW_LAYOUT:
 			response["status"] = "NETWORK_READY";
-		}	
+			break;
+		case NodeState::NETW_CREATED:
+			response["status"] = "NETWORK_READY";
+			break;
+		case NodeState::WAITING_LAYOUT_RESPONSE:
+			//response["status"] = "NETWORK_READY";
+			break;
+		case NodeState::WAITING_PING_RESPONSE:
+			//response["status"] = "NETWORK_READY";
+			break;
+		}
 	}
 	else if (path == "/eda_coin/NETWORK_LAYOUT") {
 		if (currState == NodeState::WAITING_NETW_LAYOUT) {
 			response["status"] = "null";
+			currState = NodeState::NETW_CREATED;
+			executeLayout();
 		}
 	}
 	else {
@@ -364,64 +377,65 @@ void FullNode::algoritmoParticular(void)
 {
 	json layoutJson;
 	for (NodeInfo node : pingedNodes) {
-		layoutJson["nodes"].push_back(ip + ":" + to_string(port));
+		layoutJson["nodes"].push_back(createAddress(node.ip, node.puerto));
 	}
 
 	cout << layoutJson << endl;
 	
-	for (int num_nodo = 0 ; num_nodo < pingedNodes.size(); num_nodo++ )
-	{
-		//imprimo un aviso nomas
-		if (pingedNodes[num_nodo].connections >= 2)
-		{
-			cout << "A este nodo no lo conecto con nadie porque ya tiene 2 conexiones" << endl;
-		}
-		else
-		{
-			//imprimo un aviso nomas
-			if (pingedNodes[num_nodo].connections == 1)
+	if (pingedNodes.size() > 1) {
+
+		if (pingedNodes.size() > 2) {
+
+			for (int num_nodo = 0; num_nodo < pingedNodes.size(); num_nodo++)
 			{
-				cout << "A este nodo lo conectare una unica vez ya que tiene una conexion" << endl;
-			}
-			//hago las conexiones hasta que el numero de conexiones sea 2 
-			while (pingedNodes[num_nodo].connections < 2)
-			{
-				int node_to_connect;
-				bool already_conected;
-				//le doy un numero arbitrario que no sea justo su mismo numero para evitar que se conecte consigo mismo, ni tampoco sea una conexion que ya se establecio.
-				do{
-					already_conected = false;
-					node_to_connect = rand() % pingedNodes.size() + 0;
-					for (int i = 0; i < pingedNodes[num_nodo].conectedWith.size(); i++)
+				//imprimo un aviso nomas
+				if (pingedNodes[num_nodo].connections < 2)
+				{
+
+					//hago las conexiones hasta que el numero de conexiones sea 2 
+					while (pingedNodes[num_nodo].connections < 2)
 					{
-						if (node_to_connect == pingedNodes[num_nodo].conectedWith[i])
-						{
-							already_conected = true;
-						}
+						int node_to_connect;
+						bool already_conected;
+						//le doy un numero arbitrario que no sea justo su mismo numero para evitar que se conecte consigo mismo, ni tampoco sea una conexion que ya se establecio.
+						do {
+							already_conected = false;
+							node_to_connect = rand() % pingedNodes.size() + 0;
+							for (int i = 0; i < pingedNodes[num_nodo].conectedWith.size(); i++)
+							{
+								if (node_to_connect == pingedNodes[num_nodo].conectedWith[i])
+								{
+									already_conected = true;
+								}
+							}
+						} while (num_nodo == node_to_connect || already_conected == true);
+
+						//creo las direcciones de salida y llegada de la conexion
+						layoutJson["edges"].push_back({ {"target1", createAddress(pingedNodes[num_nodo].ip, pingedNodes[num_nodo].puerto)},
+													  {"target2", createAddress(pingedNodes[node_to_connect].ip, pingedNodes[node_to_connect].puerto)} });
+						pingedNodes[num_nodo].conectedWith.push_back(node_to_connect);
+						pingedNodes[node_to_connect].conectedWith.push_back(num_nodo);
+						pingedNodes[num_nodo].connections++;
+						pingedNodes[node_to_connect].connections++;
 					}
-				} while (num_nodo == node_to_connect || already_conected == true);
-
-				//creo las direcciones de salida y llegada de la conexion
-				layoutJson["edges"].push_back({{"target1", createAddress(pingedNodes[num_nodo].ip, pingedNodes[num_nodo].puerto)},
-											  {"target2", createAddress(pingedNodes[node_to_connect].ip, pingedNodes[node_to_connect].puerto)}});				
-				pingedNodes[num_nodo].conectedWith.push_back(node_to_connect);
-				pingedNodes[node_to_connect].conectedWith.push_back(num_nodo);
-				pingedNodes[num_nodo].connections++;
-				pingedNodes[node_to_connect].connections++;
+				}
 			}
-		}
-	}
 
-	cout << "json de la red:" << endl << endl << layoutJson.dump(2) << endl;
-	
-	//compruebo que sea conexo el grafo
-	if (es_conexo())
-	{
-		//sendLayout(layoutJson);
-	}
-	else
-	{
-		cout << "No es conexo" << endl;
+		}
+		else {
+			layoutJson["edges"].push_back({ {"target1", createAddress(pingedNodes[0].ip, pingedNodes[0].puerto)},
+										  { "target2", createAddress(pingedNodes[1].ip, pingedNodes[1].puerto)} });
+		}
+
+		cout << "json de la red:" << endl << endl << layoutJson.dump(2) << endl;
+
+		//compruebo que sea conexo el grafo
+		//es_conexo()
+
+		layout = layoutJson;
+
+
+
 	}
 	
 }
@@ -467,16 +481,17 @@ void visitar(int nodo_a_visitar, vector<NodeInfo>& pingedNodes)
 void FullNode::doPolls() {
 	getNodeIoContext().poll();
 	curlPoll();
+	static bool b00l = true;
 	switch (currState) {
 	case NodeState::NETW_CREATED:
 		break;
 	case NodeState::IDLE:
 		ALLEGRO_EVENT ev;
-		
-		if (al_get_next_event(queue, &ev) && ev.type == ALLEGRO_EVENT_TIMER && port!=10) {
+
+		if (al_get_next_event(queue, &ev) && ev.type == ALLEGRO_EVENT_TIMER) {
 
 			countdown -= 10;
-			
+
 			//cout << countdown << endl;
 			if (!countdown) {
 				cout << port << " done!" << endl;
@@ -491,38 +506,101 @@ void FullNode::doPolls() {
 		}
 		break;
 	case NodeState::COL_NETW_MEMBS:
-		pingNodes();
-		currState = NodeState::WAITING_PING_RESPONSE;
+		if (pingedNodes.size() < genesisNodes.size()) {
+			pingNodes();
+			currState = NodeState::WAITING_PING_RESPONSE;
+		}
+		else {
+			algoritmoParticular();
+			currState = NodeState::SENDING_LAYOUTS;
+		}
 		break;
 	case NodeState::WAITING_PING_RESPONSE:
 		if (!client.getAnswer().empty()) {
+
+			string dummy = client.getAnswer()["status"];
+
 			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				currState = NodeState::NETW_CREATED;
+				cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress;
 				addConnection(pingingNodeAdress);
 				algoritmoParticular();
+				currState = NodeState::SENDING_LAYOUTS;
+				client.clearAnswer();
 			}
 			else if (client.getAnswer()["status"] == "NETWORK_NOTREADY") {
-				//agregarlo a tus vasallos 
+				NodeInfo newNode;
+				newNode.puerto = stoi(pingingNodeAdress.substr(pingingNodeAdress.find(":") + 1));
+				newNode.ip = pingingNodeAdress.substr(0, pingingNodeAdress.find(":"));
+				pingedNodes.push_back(newNode);
 				currState = NodeState::COL_NETW_MEMBS;
-			}
-			else {
-				cout << "error en WAITING PING RESPONSE" << endl;
+				client.clearAnswer();
 			}
 		}
+		break;
+	case NodeState::WAITING_LAYOUT_RESPONSE:
+		if (!client.getAnswer().empty()) {
+			pingedNodes.pop_back();
+			client.clearAnswer();
+			currState = NodeState::SENDING_LAYOUTS;
+		}
+		break;
+	case NodeState::SENDING_LAYOUTS:
+		if (pingedNodes.size() > 1) {
+			client.methodPost("NETWORK_LAYOUT", pingedNodes.back().ip, pingedNodes.back().puerto, layout);
+			currState = NodeState::WAITING_LAYOUT_RESPONSE;
+		}
+		else {
+			currState = NodeState::NETW_CREATED;
+		}
+		break;
+	case NodeState::WAITING_NETW_LAYOUT:
 		break;
 	}
 }
 
 void FullNode::pingNodes() {
+
+	int randNum, targetPort;
+	bool alreadyPinged;
+	int count = 0;
+
+	do {
+
+		alreadyPinged = false;
+		randNum = rand() % genesisNodes.size();
+		targetPort = stoi(genesisNodes[randNum]);
+
+		for (NodeInfo node : pingedNodes) {
+
+			if (targetPort == node.puerto) {
+				alreadyPinged = true;
+			}
+
+		}
+
+	} while (alreadyPinged);
+
+
+	
 	json emptyJson;
 	emptyJson.clear();
-	string outIP = "127.0.0.1";
-	int outPORT = 10;
-	json placeholder;
-	client.methodPost("PING", outIP, outPORT, placeholder);
 
+	pingingNodeAdress = createAddress("127.0.0.1", targetPort);
+
+	cout << createAddress(ip, port) << " tried to ping " << targetPort << endl;
+	client.methodPost("PING", "127.0.0.1", targetPort, emptyJson);
 }
 
-void FullNode::sendLayout(json& layout) {
-	//post
+void FullNode::executeLayout()
+{
+	string thisNodesAddress = createAddress(ip, port);
+
+	for (auto connection : incoming_json["edges"]) {
+		if (connection["target1"] == thisNodesAddress) {
+			addConnection(connection["target2"]);
+		}
+		else if (connection["target2"] == thisNodesAddress) {
+			addConnection(connection["target1"]);
+		}
+	}
 }

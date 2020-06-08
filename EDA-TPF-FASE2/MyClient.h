@@ -26,6 +26,7 @@ public:
 	bool performRequest(void);
 	bool waiting4response();
 	json getAnswer();
+	void clearAnswer();
 	~MyClient();
 
 private:

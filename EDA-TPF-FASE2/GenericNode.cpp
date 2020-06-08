@@ -98,7 +98,7 @@ void GenericNode::start() {
 
 void GenericNode::listen_connection()
 {
-	std::cout << "listening conection..." << std::endl;
+	//std::cout << "listening conection..." << std::endl;
 	this->handler_socket = new boost::asio::ip::tcp::socket(context_);
 
 	acceptor_.async_accept(
@@ -124,14 +124,14 @@ void GenericNode::shutdown_socket_for_connection(string incoming_address) {
 
 void GenericNode::connection_received_cb(const boost::system::error_code& error)
 {
-	std::cout << "connection_received_cb()" << std::endl;
+	//std::cout << "connection_received_cb()" << std::endl;
 	// me fijo de donde vino la conexion
 	string ip = handler_socket->remote_endpoint().address().to_string();
 	unsigned int port = handler_socket->remote_endpoint().port();
-	std::cout << ip << " ";
-	std::cout << port << std::endl;
+	//std::cout << ip << " ";
+	//std::cout << port << std::endl;
 	string inc_address = createAddress(ip, port-1);
-	std::cout << "incoming adress "<< inc_address << endl;
+	//std::cout << "incoming address "<< inc_address << endl;
 
 	// Checkeo que la conexion sea de un puerto de mi red
 	if (connections.find(inc_address) != connections.end()) {
@@ -156,7 +156,7 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 		read(inc_address);
 	}
 	else {
-		std::cout << error.message() << std::endl;
+		//std::cout << error.message() << std::endl;
 	}
 
 	return;
@@ -165,10 +165,10 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 
 void GenericNode::answer(string incoming_address)
 {
-	std::cout << "answer()" << std::endl;
+	//std::cout << "answer()" << std::endl;
 	if (answers[incoming_address] != "") {
 
-		cout << "Estoy mandando a " << incoming_address << endl;
+		//cout << "Estoy mandando a " << incoming_address << endl;
 		boost::asio::async_write(
 			*(connections[incoming_address]),
 			boost::asio::buffer(answers[incoming_address]),
@@ -178,7 +178,7 @@ void GenericNode::answer(string incoming_address)
 		);
 	}
 	else {
-		cout << "Nada cargado en answer" << " // " << "Pedido de " << incoming_address << " a nodo " << createAddress(ip, port);
+		//cout << "Nada cargado en answer" << " // " << "Pedido de " << incoming_address << " a nodo " << createAddress(ip, port);
 		shutdown_socket_for_connection(incoming_address);
 		listen_connection();
 	}
@@ -188,9 +188,9 @@ void GenericNode::answer(string incoming_address)
 void GenericNode::response_sent_cb(const boost::system::error_code& error,
 	size_t bytes_sent, string incoming_address)
 {
-	std::cout << "response_sent_cb()" << std::endl;
+	//std::cout << "response_sent_cb()" << std::endl;
 	if (!error) {
-		std::cout << "Response sent. " << bytes_sent << " bytes." << std::endl;
+		//std::cout << "Response sent. " << bytes_sent << " bytes." << std::endl;
 	}
 	shutdown_socket_for_connection(incoming_address);
 	listen_connection();
@@ -198,7 +198,7 @@ void GenericNode::response_sent_cb(const boost::system::error_code& error,
 
 
 void GenericNode::read(string incoming_address) {
-	std::cout << "read()" << std::endl;
+	//std::cout << "read()" << std::endl;
 	// TODO: REMOVE THIS DEBUG IF
 	if (connections[incoming_address] == nullptr) {
 		cout << "handler is null" << endl;
@@ -211,22 +211,14 @@ void GenericNode::read(string incoming_address) {
 
 
 bool GenericNode::parse_request(string incoming_address) {
-	std::cout << "parse_request()" << std::endl;
+	//std::cout << "parse_request()" << std::endl;
 
 	bool ret = false;
 	string POST_request = "";
-	json POST_requestJSON;
 	unsigned int block_id=0, count=0;
 	string path_requested;
 
 	std::string mystring(requests[incoming_address].begin(), requests[incoming_address].end());
-
-
-	// CHECK: 
-		// - http v1.1 ?
-		// - GET or POST ?
-	// RETRIEVE:
-		// - path_requested
 
 	if (mystring.size() != 0
 		&& (mystring.find("GET") == 0 || mystring.find("POST") == 0)
@@ -235,7 +227,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		// recibi un get
 		std::size_t reference_size = mystring.find("HTTP/1.1") - 5;
 		path_requested = mystring.substr(5, reference_size - 1);
-		std::cout << "Parsed without errors. The requested html is " << path_requested << std::endl;
+		//std::cout << "Parsed without errors. The requested html is " << path_requested << std::endl;
 		
 		// TODO: ver que no rompa cuando no es un GET, y agregarle la funcion para agarrar el json del POST
 		char* str = new char[path_requested.length() + 1];
@@ -254,7 +246,7 @@ bool GenericNode::parse_request(string incoming_address) {
 				POST_request += mystring[j];
 				j++;
 			}
-		POST_requestJSON = json::parse(POST_request);
+		incoming_json = json::parse(POST_request);
 		ret = true;
 	}
 	else {
@@ -298,7 +290,7 @@ void GenericNode::message_received_cb(const boost::system::error_code& error, si
 	// DEBUG INFO RECIEVED
 	string decode;
 	for (int i = 0; i < requests[incoming_address].size(); i++) {
-		std::cout << requests[incoming_address][i];
+		//std::cout << requests[incoming_address][i];
 		if(requests[incoming_address][i] != '\0')
 			decode += requests[incoming_address][i];
 	}
@@ -351,7 +343,7 @@ string GenericNode::parseEndPoint(char* str)
 	char* strok = strtok(str, "?");
 	if (strok != nullptr)
 		returnPath = string(strok);  //me quedo cn lo que haya hasta ?
-	cout << "Path parsed: " << returnPath << endl;
+	//cout << "Path parsed: " << returnPath << endl;
 	strtok(NULL, "="); //tiro lo que haya entre ? y =
 	return returnPath;
 }
@@ -363,7 +355,7 @@ unsigned int GenericNode::parseBlockId(char* str)
 	if (strok != nullptr)
 		returnBlock_id = stoi(string(strok)); //me quedo con lo que haya entre = y &
 	strtok(NULL, "="); ////tiro lo que haya entre & y =
-	cout << "Block id parsed: " << returnBlock_id << endl;
+	//cout << "Block id parsed: " << returnBlock_id << endl;
 	return returnBlock_id;
 }
 
@@ -373,7 +365,7 @@ unsigned int GenericNode::parseCount(char* str)
 	char *strok = strtok(NULL, "=");
 	if (strok != nullptr)
 		c = stoi(string(strok)); //me quedo con lo que haya entre = y final
-	cout << "Block count parsed: " << c << endl;
+	//cout << "Block count parsed: " << c << endl;
 	return c;
 }
 
@@ -385,4 +377,9 @@ NodeType GenericNode::getType()
 {
 	return type;
 	return NodeType();
+}
+
+void GenericNode::giveAvailableNodes(vector<string>& genNodes)
+{
+	genesisNodes = genNodes;
 }

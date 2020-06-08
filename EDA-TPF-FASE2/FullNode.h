@@ -5,7 +5,7 @@
 
 #include <allegro5/allegro.h>
 
-enum class NodeState { IDLE, COL_NETW_MEMBS, WAITING_NETW_LAYOUT, NETW_CREATED, WAITING_PING_RESPONSE};
+enum class NodeState { IDLE, COL_NETW_MEMBS, WAITING_NETW_LAYOUT, NETW_CREATED, WAITING_PING_RESPONSE, SENDING_LAYOUTS, WAITING_LAYOUT_RESPONSE};
 enum class NodeEvents { TIMEOUT, NETW_NOT_READY, NETW_READY_PING, PING};
 
 
@@ -18,11 +18,13 @@ public:
 	void sendTX(std::string path, std::string outIp, int outPort, vector<int> amounts, vector<std::string> publicIds);
 	void algoritmoParticular();
 	void doPolls();
-	vector<NodeInfo> pingedNodes;
+	
+	
 	
 private:
 	
-	void sendLayout(json& layoutJson);
+	void executeLayout();
+	vector<NodeInfo> pingedNodes;
 	void pingNodes();
 	NodeState currState;
 	bool es_conexo(void);
@@ -35,6 +37,7 @@ private:
 	unsigned int generateID(unsigned char* str);
 	vector<std::string> makeMerklePath(int blockNumber, std::string txid);
 	json to_send;
+	json layout;
 	ALLEGRO_TIMER* timer;
 	ALLEGRO_EVENT_QUEUE* queue;
 	string pingingNodeAdress;
