@@ -550,6 +550,8 @@ void FullNode::doPolls() {
 			currState = NodeState::WAITING_LAYOUT_RESPONSE;
 		}
 		else {
+			incoming_json = layout;
+			executeLayout();
 			currState = NodeState::NETW_CREATED;
 		}
 		break;
