@@ -219,7 +219,7 @@ bool Simulation::appendNode(string& my_ip, unsigned int& my_port, NodeType my_ty
 bool Simulation::areFullReady() {
 	bool ready = true;
 	for (auto node : Nodes) {
-		if (node->getType == NodeType::FULL && !(node->getState())) {
+		if (node->getType() == NodeType::FULL && !(node->getState())) {
 			ready = false;
 		}
 	}
@@ -233,11 +233,11 @@ void Simulation::connectSPV()
 		do {
 			int randNum = rand() % Nodes.size();
 			node1 = Nodes[randNum];
-		} while (node1->getType != NodeType::FULL);
+		} while (node1->getType() != NodeType::FULL);
 		do {
 			int randNum = rand() % Nodes.size();
 			node2 = Nodes[randNum];
-		} while (node2->getType != NodeType::FULL || node1 == node2);
+		} while (node2->getType() != NodeType::FULL || node1 == node2);
 
 		string MyIp = "127.0.0.1";
 		unsigned int myPort = spvPort;
