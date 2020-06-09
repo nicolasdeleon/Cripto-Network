@@ -478,6 +478,8 @@ void interfaseEventGenerator::printChooseMode(void) {
 		guiEvents.push(new cEventBack);
 	}
 
+	ImGui::SetNextWindowPos(ImVec2(100, 120));
+	ImGui::SetNextWindowSize(ImVec2(300, 300));
 	if (ImGui::BeginPopupModal("PickupJSON", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 
@@ -559,7 +561,7 @@ bool interfaseEventGenerator::print_SelectJsons(vector<string>& nombres)
 	bool eventHappened;
 
 	static int checked = -1;
-	ImGui::BeginChild(".json files in current folder", ImVec2(300, 400), true, ImGuiWindowFlags_None);
+	ImGui::BeginChild(".json files in current folder", ImVec2(200, 200), true, ImGuiWindowFlags_None);
 
 	for (int i = 0; i < nombres.size(); i++)
 	{
