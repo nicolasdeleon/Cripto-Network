@@ -29,10 +29,12 @@ public:
 	vector<GenericNode*> getNodes();
 	string getRequestAnswer(string address);
 	vector<GenericNode*> Nodes;
+	void giveAddress2Nodes(vector<string>& addss);
 	~Simulation();
 private:
 	string createAddress(string ip, int port);
 	vector<boost::asio::io_context*> contexts;
+
 
 };
 

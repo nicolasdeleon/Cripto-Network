@@ -106,6 +106,13 @@ string Simulation::createAddress(string ip, int port) {
 	return address;
 }
 
+void Simulation::giveAddress2Nodes(vector<string>& addss)
+{
+	for (auto node : Nodes) {
+		node->giveAvailableNodes(addss);
+	}
+}
+
 void Simulation::startNodes() {
 	for (GenericNode* node : Nodes) {
 		// Itero por todos mis nodos y hago cosas tipo start()
@@ -181,7 +188,7 @@ bool Simulation::appendNode(string& my_ip, unsigned int& my_port, NodeType my_ty
 	if ((my_type == NodeType::FULL && neighborhood.size() < 1) ||
 		(my_type == NodeType::SPV && neighborhood.size() < 2)) {
 		res = false;
-		std::cout << "Cantidad de conexiones incorrectas para el tipo de nodo" << std::endl;
+		cout << "Cantidad de conexiones incorrectas para el tipo de nodo" << endl;
 	}
 
 	GenericNode* my_node = addNode(my_ip, my_port, my_type);
@@ -197,7 +204,7 @@ bool Simulation::appendNode(string& my_ip, unsigned int& my_port, NodeType my_ty
 	if (!res) {
 		// si hasta aca hubo algun problema retorno para no pinguear a nadie
 		deleteNode(my_ip, my_port);
-		std::cout << "No se pudo appendear el nodo" << std::endl;
+		cout << "No se pudo appendear el nodo" << endl;
 		return res;
 	}
 	

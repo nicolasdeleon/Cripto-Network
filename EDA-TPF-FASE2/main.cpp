@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 
-enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, dummyState};
+enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, WelcomeScreen, dummyState};
 
 using namespace std;
 class FSMImplementation : public genericFSM
@@ -16,12 +16,13 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-		const fsmCell fsmTable[4][5] = {
+		const fsmCell fsmTable[5][5] = {
 			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx							E_MakeTsx													
 			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)}},  //MainMenu
 			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)}},  //CreatingNode
-			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)}, {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
-			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		      {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}}	  //MakeTsx
+			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},		  {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
+			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		  {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}},	  //MakeTsx
+			{	{WelcomeScreen,TX(printWelcomeScreen)},	{WelcomeScreen,TX(dummyfunc)}, {MainMenu,TX(setupApendix)},		  {MainMenu,TX(setupGenesis)},	    {WelcomeScreen,TX(dummyfunc)}}	  //welcomeScreen
 			};
 	
 	//The action routines for the FSM
@@ -52,11 +53,52 @@ class FSMImplementation : public genericFSM
 		return;
 	}
 
+	void printWelcomeScreen(genericEvent* ev) {
+		guiEvGen->printChooseMode();
+		return;
+	}
+
+	void setupApendix(genericEvent* ev) {
+		cout << "setupAp" << endl;
+		return;
+	}
+
+	void setupGenesis(genericEvent* ev) {
+
+		cout << "setupGen" << endl;
+		json creador;
+
+		string str = guiEvGen->getFilename();
+
+		//Abro el archivo y lo asigno a mi variable miembro blocks (de tipo json)
+		ifstream blocks_file(str, ifstream::binary);
+
+		blocks_file >> creador;
+		if (!creador.empty())
+		{
+			for (string node : creador["full-nodes"]) {
+
+				sim->addNode("127.0.0.1", stoi(node), NodeType::FULL);
+			}
+			for (string node : creador["spv"]) {
+
+				sim->addNode("127.0.0.1", stoi(node), NodeType::SPV);
+			}
+			vector<string> addresses = creador["full-nodes"];
+			sim->giveAddress2Nodes(addresses);
+
+		}
+
+		// terminar las configs con un startNodes()
+		sim->startNodes();
+		return;
+	}
+
 	interfaseEventGenerator* guiEvGen;
 	Simulation* sim;
 
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],5,4,MainMenu){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],5,5, WelcomeScreen){}
 	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
 		guiEvGen = guiEvGenerator;
 	}
@@ -81,84 +123,12 @@ int main(int argc, char** argv)
 
 	srand(time(NULL));
 
-	json creador;
-	//esta parte de importar al json habria que hacerla desde la gui como en el tp1 que te daba la direccion de la carpeta y te cargaba el json que querias
 
-	string str = "json_creacion.json";
-	
-	//Abro el archivo y lo asigno a mi variable miembro blocks (de tipo json)
-	ifstream blocks_file(str, ifstream::binary);
-
-	blocks_file >> creador;
-	if (!creador.empty()) 
-	{	
-		for (string node : creador["full-nodes"]) {
-			
-			sim.addNode("127.0.0.1", stoi(node), NodeType::FULL);
-		}
-		for (string node : creador["spv"]) {
-
-			sim.addNode("127.0.0.1", stoi(node), NodeType::SPV);
-		}
-		for (auto node : sim.Nodes) {
-			vector<string> addresses = creador["full-nodes"];
-			node->giveAvailableNodes(addresses);
-		}
-	}
-
-
-	// terminar las configs con un startNodes()
-	sim.startNodes();
 
 	guiEvGen.linkSimulation(&sim);
 	/* Esto serian configuraciones pre iniciar el programa */
 
 	
-
-	//aqui llamo a mi nodo central para que empiece a hacer la funcion algoritmoparticular que esta en full node.
-	//asumo que el nodo 1 (el del puerto 10) es el nodo que invoca este algoritmo.
-	
-	//toda esta primer parte es para elegir un nodo en el arreglo que sea full ver si es necesario despues en la implementacion de esto.
-	
-	/*
-	int Num_nodo = -1;
-	for (int i=0; i<sim.Nodes.size();i++)
-	{
-		if (sim.Nodes[i]->getType() == NodeType::FULL)
-		{
-			Num_nodo = i;
-			i = sim.Nodes.size(); //para que salga del for, lo se re cabeza pero no importa tanto aca eso es mas bien de prueba
-		}
-	}
-
-	//controlo que exista algun nodo full cargado
-	if (Num_nodo != -1)
-	{
-		//pongo el mismo nodo como pingeado en la lista de pingeados
-		NodeInfo node;
-
-		
-		//pongo los pingeados en el vector de pingeados
-		for (int i = 0; i < 4; i++)
-		{
-			if (sim.Nodes[i]->getType() == NodeType::FULL && i != Num_nodo )
-			{
-				node.ip = sim.Nodes[i]->getIP();
-				node.puerto = sim.Nodes[i]->getPort();
-				FullNode* nodoTemp = dynamic_cast<FullNode*>(sim.Nodes[Num_nodo]);
-				(*nodoTemp).pingedNodes.push_back(node);
-			}
-		}
-		((FullNode*)(sim.Nodes[Num_nodo]))->algoritmoParticular();
-		//ahora que tengo la lista con los pingednodes cargados empiezo a hacer el algoritmo propiamente dicho
-	}
-	else
-	{
-		cout << "no encontre ningun nodo full ocurrio un problema" << endl;
-	}
-	*/
-
-
 	bool quit = false;
 	
 	do

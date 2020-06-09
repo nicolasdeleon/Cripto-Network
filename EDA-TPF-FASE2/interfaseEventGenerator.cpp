@@ -457,6 +457,133 @@ void interfaseEventGenerator::printMakeTsx(void) {
 	al_flip_display();
 }
 
+void interfaseEventGenerator::printChooseMode(void) {
+	ImGui_ImplAllegro5_NewFrame();
+	ImGui::NewFrame();
+
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImVec2(SIZE_SCREEN_X, SIZE_SCREEN_X));
+
+	ImGui::Begin("EDAcoin", 0, 0);
+
+	if (ImGui::Button("Modo Genesis")) {
+		ImGui::OpenPopup("PickupJSON");
+	}
+	
+	if (ImGui::Button("Modo appendix")) {
+		guiEvents.push(new cEventManageConnections);
+	}
+
+	if (ImGui::BeginPopupModal("PickupJSON", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+
+		static char path[MAX_PATH];
+		ImGui::InputText("Directorio", path, sizeof(char) * MAX_PATH);
+
+
+		if (string(path) != "") {
+
+			directory = path;
+			jsonPaths = lookForJsonFiles(path);
+			if (jsonPaths.size() > 0 && print_SelectJsons(jsonPaths)) {}
+		}
+
+		//entra aca solo si hubo un error en el parseo para mostrarlo en forma de pop-up
+		if (failed == true)
+		{
+			ImGui::OpenPopup("Failed");
+
+			if (ImGui::BeginPopupModal("Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Separator();
+
+				if (ImGui::Button("OK", ImVec2(120, 0)))
+				{
+					failed = false;
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
+			}
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(120, 0))) {
+			ImGui::CloseCurrentPopup();			
+		}
+		ImGui::EndPopup();
+	}
+
+	ImGui::End();
+
+	ImGui::Render();
+
+	al_clear_to_color(al_map_rgb(211, 211, 211));
+
+	ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
+
+	al_flip_display();
+}
+
+vector<string> interfaseEventGenerator::lookForJsonFiles(const char* directoryName)
+{
+
+	vector<string>filenames;
+
+	if (string(directoryName).size() > 2) {
+
+		fs::path bPath(directoryName);
+
+		if (exists(bPath) && is_directory(bPath))
+		{
+			for (fs::directory_iterator iterator(bPath); iterator != fs::directory_iterator(); iterator++)
+			{
+				if ((iterator->path().extension().string() == ".json"))
+				{
+					filenames.push_back(iterator->path().filename().string());
+				}
+			}
+		}
+
+	}
+
+	return filenames;
+}
+
+
+bool interfaseEventGenerator::print_SelectJsons(vector<string>& nombres)
+{
+	bool eventHappened;
+
+	static int checked = -1;
+	ImGui::BeginChild(".json files in current folder", ImVec2(300, 400), true, ImGuiWindowFlags_None);
+
+	for (int i = 0; i < nombres.size(); i++)
+	{
+		ImGui::RadioButton(nombres[i].c_str(), &checked, i);
+	}
+
+	ImGui::EndChild();
+
+
+	if (ImGui::Button("Seleccionar") && checked != -1)
+	{
+		for (int i = 0; i < nombres.size(); i++)
+		{
+				filename = nombres[checked];
+				guiEvents.push(new cEventManageConnections);
+				ImGui::CloseCurrentPopup();
+		}
+
+		eventHappened = true;
+	}
+	else {
+		eventHappened = false;
+	}
+	return eventHappened;
+}
+
+
 std::vector<std::string> interfaseEventGenerator::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
 	std::vector<std::string> retval;
 	for (auto const& element : input_map) {
@@ -465,5 +592,6 @@ std::vector<std::string> interfaseEventGenerator::extract_keys(std::map<std::str
 	return retval;
 }
 
+string interfaseEventGenerator::getFilename() { return filename; }
 
 
