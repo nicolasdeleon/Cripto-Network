@@ -29,9 +29,7 @@ MyClient::MyClient()
 
 MyClient::~MyClient()
 {
-	curl_multi_remove_handle(multiHandler, handler);
-	curl_easy_cleanup(handler);
-	curl_multi_cleanup(multiHandler);
+
 }
 
 void MyClient::methodGet(string _path, string out_ip, int out_port, string block_id, int count) //path vendria a ser lo que queres obtener
