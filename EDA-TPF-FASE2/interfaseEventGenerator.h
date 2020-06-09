@@ -69,6 +69,7 @@ class interfaseEventGenerator : public eventGenerator
 	}
 	string getFilename();
 	void pushBackEvent();
+	void pushCnxEvent();
 	
 	private:
 

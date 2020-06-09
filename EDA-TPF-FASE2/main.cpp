@@ -23,7 +23,7 @@ class FSMImplementation : public genericFSM
 			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},		  {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
 			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		  {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}},	  //MakeTsx
 			{	{WelcomeScreen,TX(printWelcomeScreen)},	{WelcomeScreen,TX(dummyfunc)}, {MainMenu,TX(setupApendix)},		  {workGenesis,TX(setupGenesis)},			{WelcomeScreen,TX(dummyfunc)}},	  //welcomeScreen
-			{   {workGenesis,TX(checkifReady)},	{workGenesis,TX(dummyfunc)},  {MainMenu,TX(dummyfunc)},		  {workGenesis,TX(dummyfunc)},	    {workGenesis,TX(dummyfunc)}}	  //welcomeScreen
+			{   {workGenesis,TX(checkifReady)},		{workGenesis,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},		  {MainMenu,TX(dummyfunc)},	    {workGenesis,TX(dummyfunc)}}	  //welcomeScreen
 			};
 	
 	//The action routines for the FSM
@@ -99,11 +99,12 @@ class FSMImplementation : public genericFSM
 	}
 
 	void checkifReady(genericEvent* ev) {
-		if (sim->areFullReady()) {
+		if (sim->areFullReady() && sim->spvGenNodes.size()) {
 			sim->connectSPV();
-			guiEvGen->pushBackEvent();
 		}
-		
+		else if (!(sim->spvGenNodes.size())) {
+			guiEvGen->pushBackEvent();
+		}	
 	}
 
 	interfaseEventGenerator* guiEvGen;

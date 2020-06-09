@@ -228,8 +228,8 @@ bool Simulation::areFullReady() {
 
 void Simulation::connectSPV()
 {
-	for (int spvPort : spvGenNodes) {
-		GenericNode* node1, * node2;
+		
+		GenericNode* node1, *node2;
 		do {
 			int randNum = rand() % Nodes.size();
 			node1 = Nodes[randNum];
@@ -240,9 +240,11 @@ void Simulation::connectSPV()
 		} while (node2->getType() != NodeType::FULL || node1 == node2);
 
 		string MyIp = "127.0.0.1";
-		unsigned int myPort = spvPort;
+		unsigned int myPort = static_cast<unsigned int>(spvGenNodes.back());
+		spvGenNodes.pop_back();
+
 		vector<string> neighborhood = { (node1->getIP() + ":" + to_string(node1->getPort())),
 										(node2->getIP() + ":" + to_string(node2->getPort())) };
+
 		appendNode(MyIp, myPort, NodeType::SPV, neighborhood);
-	}
 }
