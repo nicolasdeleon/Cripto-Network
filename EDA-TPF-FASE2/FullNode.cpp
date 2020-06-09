@@ -239,6 +239,8 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 
 	string to_send_string = to_send.dump();
 
+	//cout << to_send.dump(1) << endl;
+	
 	client.methodPost(path, outIp, outPort, to_send);
 }
 

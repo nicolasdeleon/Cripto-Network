@@ -237,13 +237,15 @@ bool GenericNode::parse_request(string incoming_address) {
 		if (j == string::npos) {
 			j = mystring.find("null");
 		}
-		if (j != string::npos)
+		if (j != string::npos) {
 			while (mystring[j] != '\0') {
 				POST_request += mystring[j];
 				j++;
 			}
-		incoming_json = json::parse(POST_request);
-		ret = true;
+			cout << POST_request << endl;
+			incoming_json = json::parse(POST_request);
+			ret = true;
+		}
 	}
 	else {
 		json response;
