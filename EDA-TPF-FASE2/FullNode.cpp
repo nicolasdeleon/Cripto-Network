@@ -203,6 +203,7 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 
 void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amounts, vector<string> publicIds) {
 
+	json to_send;
 	to_send.clear();
 	int nTxout = amounts.size();
 
@@ -227,7 +228,6 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 
 	string to_send_string = to_send.dump();
 
-	
 	client.methodPost(path, outIp, outPort, to_send);
 }
 
