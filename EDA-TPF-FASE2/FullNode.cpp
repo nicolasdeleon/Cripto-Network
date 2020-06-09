@@ -75,6 +75,16 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 	}
 	else if (path == "/eda_coin/send_tx") {
 		cout << incoming_address << " $" << incoming_json.dump() << endl;
+	
+		if (latest_transaction.size() == 0
+			&& latest_transaction["txid"] != incoming_json["txid"] // validate transaction -> latest_transaction != incoming_json // es nueva!
+			&& 1 /* validate transaction -> previousBlockId == bloqueMasReciente // valida condicion 1
+					validate transaction -> MerkleRoot == makeMerkleRoot(incoming_json) // valida condicion 2 */
+			) {
+			// si valida todo, guardo y propago.
+			latest_transaction = incoming_json;
+			startFlooding();
+		}
 
 		// Por ahora respondemos siempre esto, habria que paresear el contenido
 		response["result"] = "null";
@@ -211,6 +221,7 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 		to_send["nTxin"] = 1;
 		to_send["nTxout"] = nTxout;
 		to_send["txid"] = "7B857A14";
+		to_send["previousBlockId"] = "00000000";
 		to_send["vout"] = {};
 		for (int i = 0; i < nTxout; i++) {}
 		to_send["vin"] = {};
@@ -267,6 +278,7 @@ string FullNode::hexCodexASCII(unsigned int number) {
 
 	return ss.str();
 }
+
 
 unsigned int FullNode::generateID(unsigned char* str){
 	unsigned int id = 0;
@@ -443,8 +455,6 @@ void FullNode::algoritmoParticular(void)
 
 		layout = layoutJson;
 
-
-
 	}
 	
 }
@@ -598,6 +608,9 @@ void FullNode::doPolls() {
 			}
 		}
 		break;
+		case NodeState::FLOODING:
+			endFlooding();
+		break;
 	}
 }
 
@@ -680,4 +693,25 @@ void FullNode::endAppend() {
 	unsigned int blocks_port = get_address_port(node_to_connect_addres);
 	getBlocks("get_blocks", blocks_ip, blocks_port, "00000000", 33);
 	neighbour_iterator = connections.begin();
+}
+
+void FullNode::startFlooding() {
+	// TODO: DO FLOODING ONLY ON FULL NODES.
+	// TODO: MAKE FLOODING PACKAGE
+	cout << createAddress(ip, port) << " started flooding ... " << endl;
+	neighbour_iterator = connections.begin();
+	currState = NodeState::FLOODING;
+	// FLOOD
+	json emptyJson = latest_transaction;
+	std::string flood_address = neighbour_iterator->first;
+	// aca de alguna manera deberia evitar floodear nodos que no sean FULL
+	string flood_ip = get_address_ip(flood_address);
+	unsigned int flood_port = get_address_port(flood_address);
+	cout << createAddress(ip, port) << " doing FLOOD on " << flood_address << endl;
+	sendTX("send_tx", flood_ip, flood_port, { 15 }, { "32423" });
+}
+
+void FullNode::endFlooding() {
+	neighbour_iterator = connections.begin();
+	currState = NodeState::NETW_CREATED;
 }

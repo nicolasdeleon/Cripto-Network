@@ -17,7 +17,8 @@ class FullNode : public GenericNode
 		WAITING_PING_RESPONSE,
 		SENDING_LAYOUTS,
 		WAITING_LAYOUT_RESPONSE,
-		APPENDING
+		APPENDING,
+		FLOODING
 	};
 
 	enum class NodeEvents {
@@ -59,6 +60,8 @@ private:
 	std::string hexCodexASCII(unsigned int number);
 	unsigned int generateID(unsigned char* str);
 	void endAppend();
+	void startFlooding();
+	void endFlooding();
 	vector<std::string> makeMerklePath(int blockNumber, std::string txid);
 	json to_send;
 	json layout;
@@ -66,6 +69,7 @@ private:
 	ALLEGRO_EVENT_QUEUE* queue;
 	string pingingNodeAdress;
 	int countdown;
+	json latest_transaction;
 };
 
 
