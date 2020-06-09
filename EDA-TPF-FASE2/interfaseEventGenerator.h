@@ -71,6 +71,7 @@ class interfaseEventGenerator : public eventGenerator
 	ALLEGRO_EVENT_QUEUE* alEventQueue;
 	ALLEGRO_DISPLAY* display;
 	vector<GenericNode*> currentNodes;
+	vector<string> connecting_to;
 	Simulation* mySim;
 	bool imguiInit();
 };

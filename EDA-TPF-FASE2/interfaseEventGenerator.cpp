@@ -167,10 +167,10 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 	ImGui::EndChild();
 
-	if (ImGui::Button("Create New Node"))
-		ImGui::OpenPopup("New Node");
+	if (ImGui::Button("Append"))
+		ImGui::OpenPopup("Append");
 
-	if (ImGui::BeginPopupModal("New Node", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	if (ImGui::BeginPopupModal("Append", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Please select the target node's IP and port:\n\n");
 		ImGui::Separator();
@@ -183,12 +183,46 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 		ImGui::RadioButton("Full Node", &NType, 0);
 		ImGui::RadioButton("SPV Node", &NType, 1);
+
+		if (ImGui::Button("Add connection"))
+			ImGui::OpenPopup("Add connection");
+
+		if (ImGui::BeginPopupModal("Add connection", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Please select the connection node's IP and port:\n\n");
+			ImGui::Separator();
+
+			static char ip[25];
+			ImGui::InputText("Node ip", ip, sizeof(char) * 25, ImGuiInputTextFlags_CharsDecimal);
+
+			static int port;
+			ImGui::InputInt("Node port", &port);
+
+			if (ImGui::Button("OK", ImVec2(120, 0))) {
+				string address = ip;
+				address += ":";
+				address += to_string(port);
+				connecting_to.push_back(address);
+			}
+			ImGui::SetItemDefaultFocus();
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+			ImGui::EndPopup();
+		}
+
+		for (string address : connecting_to) {
+			ImGui::Text(address.c_str());
+		}
 		
 		if (ImGui::Button("OK", ImVec2(120, 0))) {
 			if (!(port % 2)) {
-				mySim->addNodeAndStart("127.0.0.1", port, static_cast <NodeType>(NType));
+				string ip = "127.0.0.1";
+				unsigned int port_ui = static_cast <unsigned int>(port);
+				cout << "APPENDING" << endl;
+				mySim->appendNode(ip, port_ui, static_cast <NodeType>(NType), connecting_to);
 				currentNodes = mySim->getNodes();
 				ImGui::CloseCurrentPopup();
+				connecting_to.clear();
 			}
 			else {
 				port++;
@@ -198,7 +232,10 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
-		if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
+			ImGui::CloseCurrentPopup();
+			connecting_to.clear();
+		}
 		ImGui::EndPopup();
 	}
 
@@ -366,12 +403,6 @@ void interfaseEventGenerator::printMakeTsx(void) {
 
 	if (ImGui::Button("Cancel")) {
 		guiEvents.push(new cEventBack);
-
-		vector<string> nb = { "127.0.0.1:50", "127.0.0.1:30","127.0.0.1:10" };
-		unsigned int port = 130;
-		string ip = "127.0.0.1";
-		cout << "DEBUGING APPEND" << endl;
-		mySim->appendNode(ip, port, NodeType::SPV, nb);
 	}	
 	
 

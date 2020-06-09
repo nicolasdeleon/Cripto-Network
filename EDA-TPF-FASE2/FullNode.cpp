@@ -671,6 +671,6 @@ void FullNode::endAppend() {
 	// TODO: UN HARDCODE THIS
 	string blocks_ip = get_address_ip(node_to_connect_addres);
 	unsigned int blocks_port = get_address_port(node_to_connect_addres);
-	getBlocks("get_blocks", blocks_ip, blocks_port, "84CB2573", 6);
+	getBlocks("get_blocks", blocks_ip, blocks_port, "00000000", 33);
 	neighbour_iterator = connections.begin();
 }

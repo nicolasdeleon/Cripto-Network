@@ -7,10 +7,8 @@
 
 
 */
-MyClient::MyClient(std::string _ip, int _port) //crearlo con el local host
+MyClient::MyClient(std::string _ip, int _port) : ip(_ip), port(_port) //crearlo con el local host
 {
-	ip = _ip; //igualarlo a local post sino (hay un define) LOCALHOST
-	port = _port;
 	handler = curl_easy_init();
 	if (!handler)
 	{

@@ -145,7 +145,7 @@ void SPVNode::endAppend(){
 	// TODO: UN HARDCODE get_block_header parameters
 	string headers_ip = get_address_ip(node_to_connect_addres);
 	unsigned int headers_port = get_address_port(node_to_connect_addres);
-	client.methodGet("get_block_header", headers_ip, headers_port, "51342", 5);
+	client.methodGet("get_block_header", headers_ip, headers_port, "00000000", 33);
 	neighbour_iterator = connections.begin();
 }
 
@@ -154,11 +154,11 @@ void SPVNode::startFiltering() {
 	neighbour_iterator = connections.begin();
 	client.clearAnswer();
 	json emptyJson;
+	emptyJson["Key"] = createAddress(ip, port);
 	emptyJson.clear();
 	std::string filter_address = neighbour_iterator->first;
 	string filter_ip = get_address_ip(filter_address);
 	unsigned int filter_port = get_address_port(filter_address);
 	cout << createAddress(ip, port) << " doing filter on " << filter_address << endl;
-	// TODO: UN-HARDCODE EMPTY JSON
 	client.methodPost("send_filter", filter_ip.c_str(), filter_port, emptyJson);
 }
