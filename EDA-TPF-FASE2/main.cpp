@@ -110,7 +110,6 @@ int main(int argc, char** argv)
 	// terminar las configs con un startNodes()
 	sim.startNodes();
 
-
 	guiEvGen.linkSimulation(&sim);
 	/* Esto serian configuraciones pre iniciar el programa */
 
@@ -158,21 +157,14 @@ int main(int argc, char** argv)
 		cout << "no encontre ningun nodo full ocurrio un problema" << endl;
 	}
 	*/
-	
 
 
 	bool quit = false;
-	bool showOnce = true;
 	
 	do
 	{
 		genericEvent * ev = eventGen.getNextEvent();
 
-		/*
-		if (showOnce && sim.getRequestAnswer("127.0.0.1:80").size() != 0) {
-			cout << "Answer from 8080: " << sim.getRequestAnswer("127.0.0.1:80") << std::endl;
-			showOnce = false;
-		}*/
 		if (ev != nullptr) 
 		{
 			if (ev->getType() == E_Quit)
@@ -188,6 +180,5 @@ int main(int argc, char** argv)
 	} 
 	while (!quit);
 	
-	//system("pause");
 	return 0;
 }

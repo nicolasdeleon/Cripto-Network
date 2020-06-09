@@ -12,6 +12,13 @@ string GenericNode::createAddress(string ip, int port) {
 	return address;
 }
 
+string GenericNode::get_address_ip(string& address) {
+	return address.substr(0, address.find(":"));
+}
+
+unsigned int GenericNode::get_address_port(string& addres) {
+	return 	stoi(addres.substr(addres.find(":") + 1));
+}
 
 GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigned int port)
 	: context_(io_context),
@@ -21,7 +28,8 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	client(ip, port+1),
 	/*address(createAddress(ip, port)),*/
 	handler_socket(nullptr),
-	permitedPaths(AMOUNT_OF_PATHS)
+	permitedPaths(AMOUNT_OF_PATHS),
+	neighbour_iterator(connections.begin())
 {
 
 }

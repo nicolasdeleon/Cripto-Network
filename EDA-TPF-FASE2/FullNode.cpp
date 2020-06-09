@@ -14,8 +14,10 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	permitedPaths.push_back("/eda_coin/send_tx");
 	permitedPaths.push_back("/eda_coin/send_merkle_block");
 	permitedPaths.push_back("/eda_coin/send_filter");
+	permitedPaths.push_back("eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_block_header");
+	permitedPaths.push_back("eda_coin/get_block_header");
 	permitedPaths.push_back("/eda_coin/PING");
 	permitedPaths.push_back("/eda_coin/NETWORK_LAYOUT");
 
@@ -81,7 +83,7 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 	else if (path == "/eda_coin/send_filter") {
 		response["result"] = "null";
 	}
-	else if (path == "/eda_coin/get_blocks") {
+	else if (path == "/eda_coin/get_blocks" || path == "eda_coin/get_blocks") {
 		int blocks_left = 0;
 		bool allOk = false;
 		for (auto block : blockChain) {
@@ -102,7 +104,7 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 			response["result"] = 2;
 		}
 	}
-	else if (path == "/eda_coin/get_block_header") {
+	else if (path == "/eda_coin/get_block_header" || path == "eda_coin/get_block_header") {
 		bool allOk = false;
 		if (blockChain.size()) {
 			for (auto block : blockChain) {
@@ -164,7 +166,7 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
 	}
 
-	std::cout << "Respuesta del servidor al pedido:" << endl << response.dump() << std::endl;
+	std::cout << "Respuesta del servidor " << createAddress(ip, port) << " al pedido:" << endl << response.dump() << std::endl;
 	answers[incoming_address] = wrap_package(response.dump());
 
 }
@@ -521,7 +523,7 @@ void FullNode::doPolls() {
 			string dummy = client.getAnswer()["status"];
 
 			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress;
+				cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress << endl;
 				addConnection(pingingNodeAdress);
 				algoritmoParticular();
 				currState = NodeState::SENDING_LAYOUTS;
@@ -556,6 +558,38 @@ void FullNode::doPolls() {
 		}
 		break;
 	case NodeState::WAITING_NETW_LAYOUT:
+		break;
+	case NodeState::APPENDING:
+		if (!client.getAnswer().empty()) {
+			string dummy = client.getAnswer()["status"];
+			std::string ping_response_address = neighbour_iterator->first;
+			if (client.getAnswer()["status"] == "NETWORK_READY") {
+				cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
+			}
+			else {
+				cout << createAddress(ip, port) << " received OTHER response from " << ping_response_address << endl;
+				remove_address.push_back(ping_response_address);
+			}
+			neighbour_iterator++;
+			client.clearAnswer();
+			if (neighbour_iterator == connections.end()) {
+				for (string address : remove_address) {
+					deleteConnection(address);
+				}
+				currState = NodeState::NETW_CREATED;
+				endAppend();
+			}
+			else {
+				// PING
+				json emptyJson;
+				emptyJson.clear();
+				std::string ping_address = neighbour_iterator->first;
+				string ping_ip = get_address_ip(ping_address);
+				unsigned int ping_port = get_address_port(ping_address);
+				cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+				client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
+			}
+		}
 		break;
 	}
 }
@@ -605,4 +639,38 @@ void FullNode::executeLayout()
 			addConnection(connection["target1"]);
 		}
 	}
+}
+
+void FullNode::startAppend() {
+	neighbour_iterator = connections.begin();
+	currState = NodeState::APPENDING;
+	// PING
+	json emptyJson;
+	emptyJson.clear();
+	std::string ping_address = neighbour_iterator->first;
+	string ping_ip = get_address_ip(ping_address);
+	unsigned int ping_port = get_address_port(ping_address);
+	cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+	client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
+}
+
+void FullNode::endAppend() {
+	neighbour_iterator = connections.begin();
+	if (connections.size() == 0) {
+		cout << createAddress(ip, port) << "has no connections!" << endl;
+		return;
+	}
+	unsigned int node_to_connect = rand() % connections.size() + 0;
+	for (unsigned int i = 0; i < node_to_connect; i++) {
+			neighbour_iterator++;
+	}
+
+	string node_to_connect_addres = neighbour_iterator->first;
+
+	cout << createAddress(ip, port) << " is asking " << node_to_connect_addres << " for blocks..." << endl;
+	// TODO: UN HARDCODE THIS
+	string blocks_ip = get_address_ip(node_to_connect_addres);
+	unsigned int blocks_port = get_address_port(node_to_connect_addres);
+	getBlocks("get_blocks", blocks_ip, blocks_port, "84CB2573", 6);
+	neighbour_iterator = connections.begin();
 }

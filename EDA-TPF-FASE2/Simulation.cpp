@@ -18,7 +18,7 @@ Simulation::~Simulation() {
 }
 
 
-bool Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
+GenericNode* Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
 	bool res = true;
 	if (port % 2) {
 		cout << "ESTO NO DEBERIA PASAR!! PUERTO IMPAR!!" << endl;
@@ -39,7 +39,7 @@ bool Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
 	}
 
 	Nodes.push_back(newNode);
-	return res;
+	return newNode;
 }
 
 void Simulation::addNodeAndStart(string ip, unsigned int port, NodeType NodeType) {
@@ -166,3 +166,61 @@ string Simulation::getRequestAnswer(string address) {
 	}
 	return answer;
 }
+
+string get_address_ip(string& address) {
+	return address.substr(0, address.find(":"));
+}
+
+unsigned int get_address_port(string& addres) {
+	return 	stoi(addres.substr(addres.find(":") + 1));
+}
+
+bool Simulation::appendNode(string& my_ip, unsigned int& my_port, NodeType my_type, vector<string>& neighborhood) {
+	bool res = true;
+
+	if ((my_type == NodeType::FULL && neighborhood.size() < 1) ||
+		(my_type == NodeType::SPV && neighborhood.size() < 2)) {
+		res = false;
+		std::cout << "Cantidad de conexiones incorrectas para el tipo de nodo" << std::endl;
+	}
+
+	GenericNode* my_node = addNode(my_ip, my_port, my_type);
+	my_node->start();
+	
+	for (string neighbor : neighborhood) {
+		string neighbor_ip = get_address_ip(neighbor);
+		unsigned int neighbor_port = get_address_port(neighbor);
+		if (!createConnection(my_node->getIP(), my_node->getPort(), neighbor_ip, neighbor_port))
+			res = false;
+	}
+
+	if (!res) {
+		// si hasta aca hubo algun problema retorno para no pinguear a nadie
+		deleteNode(my_ip, my_port);
+		std::cout << "No se pudo appendear el nodo" << std::endl;
+		return res;
+	}
+	
+	my_node->startAppend();
+	
+	return res;
+}
+
+
+
+
+
+
+/*	// realizo PING a mis vecinos y el que no me devuelve NET_WORK_READY lo elimino
+// lo mas cheto seria que mi nodo este en un estado de append, cosa que ahora cuando realizo el ping
+// si recibo una respuesta, la mapeo con mi estado y si no es network_ready hago lo que tengo que hacer
+// tengo que chequear que me queden al menos 2 conexiones para psv y 1 conexion para full
+
+	if (my_type == NodeType::SPV) {
+		// mando FILTER a todos mis vecinos
+		// mando GET BLOCKS HEADER a 1 vecino cualquiera
+	}
+	else {
+		// mando GET BLOCKS a 1 vecino cualquiera
+	}
+			*/

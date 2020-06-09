@@ -7,9 +7,10 @@
 #include <vector>
 #include "MyClient.h"
 
-
+#define REMOVE "REMOVE"
 #define REQUEST_BUFFER_LENGTH 700
-#define AMOUNT_OF_PATHS 5
+#define AMOUNT_OF_PATHS 10
+#define TIME_OUT 5000
 
 enum class NodeType { FULL, SPV };
 
@@ -44,6 +45,8 @@ public:
 	//virtual void algoritmoParticular(void);
 	virtual void doPolls() = 0;
 	void giveAvailableNodes(vector<string>& genesisNodes);
+	virtual void startAppend() = 0;
+	virtual void endAppend() = 0;
 
 protected:
 	vector<string> genesisNodes;
@@ -63,7 +66,11 @@ protected:
 	unsigned int parseBlockId(char* str);
 	unsigned int parseCount(char* str);
 	NodeType type;
+	string get_address_ip(string& address);
+	void startTimeOut();
+	void isTimeOut();
 
+	unsigned int get_address_port(string& address);
 	json incoming_json;
 
 	std::string wrap_package(string json_string);
@@ -83,6 +90,11 @@ protected:
 	MyClient client;
 
 	json blockChain;
+
+	std::map<string, boost::asio::ip::tcp::socket*>::iterator neighbour_iterator;
+	vector<string> remove_address;
+
+	//std::time_t timer;
 
 };
 

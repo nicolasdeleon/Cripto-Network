@@ -366,6 +366,12 @@ void interfaseEventGenerator::printMakeTsx(void) {
 
 	if (ImGui::Button("Cancel")) {
 		guiEvents.push(new cEventBack);
+
+		vector<string> nb = { "127.0.0.1:50", "127.0.0.1:30","127.0.0.1:10" };
+		unsigned int port = 130;
+		string ip = "127.0.0.1";
+		cout << "DEBUGING APPEND" << endl;
+		mySim->appendNode(ip, port, NodeType::SPV, nb);
 	}	
 	
 
