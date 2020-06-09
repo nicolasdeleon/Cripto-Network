@@ -32,7 +32,7 @@ public:
 	void giveAddress2Nodes(vector<string>& addss);
 	bool areFullReady();
 	void connectSPV();
-	vector<int> spvGenNodes;
+	vector<unsigned int> spvGenNodes;
 
 	
 	~Simulation();

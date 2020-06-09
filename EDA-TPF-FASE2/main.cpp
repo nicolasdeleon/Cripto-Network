@@ -75,6 +75,8 @@ class FSMImplementation : public genericFSM
 		ifstream blocks_file(str, ifstream::binary);
 
 		blocks_file >> creador;
+
+		string creador_str = creador.dump();
 		if (!creador.empty())
 		{
 
@@ -82,13 +84,10 @@ class FSMImplementation : public genericFSM
 
 				sim->addNode("127.0.0.1", stoi(node), NodeType::FULL);
 			}
-			for (string node : creador["spv"]) {
-				sim->spvGenNodes.push_back(stoi(node));
+			for (string node2 : creador["spv"]) {
+				sim->spvGenNodes.push_back(stoi(node2));
 			}
 
-
-
-			
 			vector<string> addresses = creador["full-nodes"];
 			sim->giveAddress2Nodes(addresses);
 

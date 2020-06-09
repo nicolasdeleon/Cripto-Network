@@ -246,19 +246,3 @@ void Simulation::connectSPV()
 		appendNode(MyIp, myPort, NodeType::SPV, neighborhood);
 	}
 }
-
-
-
-/*	// realizo PING a mis vecinos y el que no me devuelve NET_WORK_READY lo elimino
-// lo mas cheto seria que mi nodo este en un estado de append, cosa que ahora cuando realizo el ping
-// si recibo una respuesta, la mapeo con mi estado y si no es network_ready hago lo que tengo que hacer
-// tengo que chequear que me queden al menos 2 conexiones para psv y 1 conexion para full
-
-	if (my_type == NodeType::SPV) {
-		// mando FILTER a todos mis vecinos
-		// mando GET BLOCKS HEADER a 1 vecino cualquiera
-	}
-	else {
-		// mando GET BLOCKS a 1 vecino cualquiera
-	}
-			*/
