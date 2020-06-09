@@ -61,14 +61,12 @@ protected:
 	void shutdown_open_sockets();
 	void shut_down_reciever_socket();
 	void shutdown_socket_for_connection(std::string incoming_address);
-	virtual void dispatch_response(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0) = 0;
+	virtual void dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id = 0, unsigned int count = 0) = 0;
 	string parseEndPoint(char* str);
 	unsigned int parseBlockId(char* str);
 	unsigned int parseCount(char* str);
 	NodeType type;
 	string get_address_ip(string& address);
-	void startTimeOut();
-	void isTimeOut();
 
 	unsigned int get_address_port(string& address);
 	json incoming_json;
@@ -82,7 +80,6 @@ protected:
 	boost::asio::ip::tcp::socket* handler_socket;
 	unsigned int port;
 	std::string ip;
-	//std::string address;
 	std::map<std::string, boost::asio::ip::tcp::socket*> connections;
 	
 	std::vector<std::string> permitedPaths;
@@ -93,8 +90,6 @@ protected:
 
 	std::map<string, boost::asio::ip::tcp::socket*>::iterator neighbour_iterator;
 	vector<string> remove_address;
-
-	//std::time_t timer;
 
 };
 

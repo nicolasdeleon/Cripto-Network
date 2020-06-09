@@ -30,7 +30,7 @@ void SPVNode::send_request(
 }
 
 // Funcion que responde a un pedido desde el nodo SPV
-void SPVNode::dispatch_response(string path, string incoming_address, unsigned int block_id, unsigned int count) {
+void SPVNode::dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id, unsigned int count) {
 	std::cout << "response_dispatch()" << std::endl;
 
 	json response;

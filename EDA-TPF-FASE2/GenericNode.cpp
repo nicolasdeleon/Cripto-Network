@@ -196,21 +196,12 @@ void GenericNode::answer(string incoming_address)
 void GenericNode::response_sent_cb(const boost::system::error_code& error,
 	size_t bytes_sent, string incoming_address)
 {
-	//std::cout << "response_sent_cb()" << std::endl;
-	if (!error) {
-		//std::cout << "Response sent. " << bytes_sent << " bytes." << std::endl;
-	}
 	shutdown_socket_for_connection(incoming_address);
 	listen_connection();
 }
 
 
 void GenericNode::read(string incoming_address) {
-	//std::cout << "read()" << std::endl;
-	// TODO: REMOVE THIS DEBUG IF
-	if (connections[incoming_address] == nullptr) {
-		cout << "handler is null" << endl;
-	}
 	(*(connections[incoming_address])).async_receive(
 		boost::asio::buffer(requests[incoming_address].data(), requests[incoming_address].size()),
 		std::bind(&GenericNode::message_received_cb, this, std::placeholders::_1, std::placeholders::_2, incoming_address)
@@ -219,7 +210,6 @@ void GenericNode::read(string incoming_address) {
 
 
 bool GenericNode::parse_request(string incoming_address) {
-	//std::cout << "parse_request()" << std::endl;
 
 	bool ret = false;
 	string POST_request = "";
@@ -235,9 +225,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		// recibi un get
 		std::size_t reference_size = mystring.find("HTTP/1.1") - 5;
 		path_requested = mystring.substr(5, reference_size - 1);
-		//std::cout << "Parsed without errors. The requested html is " << path_requested << std::endl;
-		
-		// TODO: ver que no rompa cuando no es un GET, y agregarle la funcion para agarrar el json del POST
+
 		char* str = new char[path_requested.length() + 1];
 		strcpy(str, path_requested.c_str());
 		path_requested = parseEndPoint(str);
@@ -269,17 +257,13 @@ bool GenericNode::parse_request(string incoming_address) {
 		// Node can handle request ?
 	if (std::find(permitedPaths.begin(), permitedPaths.end(), path_requested) != permitedPaths.end())
 	{
-
-		dispatch_response(path_requested, incoming_address, block_id, count);
-		// TODO: handleRequest() hago lo que tenga que hacer con POST_requestJSON
+		dispatch_response(path_requested, incoming_address, incoming_json, block_id, count);
 	}
 	else {
-
 		json response;
 		response["status"] = false;
 		response["result"] = 1;
 		answers[incoming_address] = wrap_package(response.dump());
-	
 	}
 
 	return ret;

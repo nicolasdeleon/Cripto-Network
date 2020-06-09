@@ -63,7 +63,7 @@ void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, js
 }
 
 // Funcion que responde a un pedido desde el nodo Full
-void FullNode::dispatch_response(string path, string incoming_address, unsigned int block_id, unsigned int count) {
+void FullNode::dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id, unsigned int count) {
 	std::cout << "response_dispatch()" << std::endl;
 
 	json response;
@@ -74,7 +74,9 @@ void FullNode::dispatch_response(string path, string incoming_address, unsigned 
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_tx") {
-		cout << incoming_address << " $" << count << endl;
+		cout << incoming_address << " $" << incoming_json.dump() << endl;
+
+		// Por ahora respondemos siempre esto, habria que paresear el contenido
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_merkle_block") {
@@ -211,15 +213,20 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 		to_send["vout"] = {};
 		for (int i = 0; i < nTxout; i++) {}
 		to_send["vin"] = {};
-		to_send["vin"].push_back({ { "blockid", "00000BDE" },
-			{ "outputIndex", 4 },
-			{ "signature", "000009B7" },
-			{ "txid", "00000EBA" } });
+		to_send["vin"].push_back(
+			{
+				{ "blockid", "00000BDE" },
+				{ "outputIndex", 4 },
+				{ "signature", "000009B7" },
+				{ "txid", "00000EBA" }
+			}
+		);
 	}
-	else{
-		//pifiaste mache
-		to_send["loco"] = "pifiaste";
-	}
+	else
+		to_send["status"] = "error";
+
+	string to_send_string = to_send.dump();
+
 	
 	client.methodPost(path, outIp, outPort, to_send);
 }

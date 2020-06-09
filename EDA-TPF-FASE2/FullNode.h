@@ -47,7 +47,7 @@ private:
 	void sendFilter(std::string path, std::string outIp, int outPort);
 	void sendBlock(std::string path_, std::string outIp, int outPort, std::string blockId);
 	void getBlocks(std::string path_, std::string outIp, int outPort, std::string blockId, int numBlocks);
-	void dispatch_response(std::string path, std::string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
+	void dispatch_response(std::string path, std::string incoming_address, json& incoming_json, unsigned int block_id = 0, unsigned int count = 0);
 	std::string hexCodexASCII(unsigned int number);
 	unsigned int generateID(unsigned char* str);
 	void endAppend();

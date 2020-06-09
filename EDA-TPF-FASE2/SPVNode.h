@@ -20,7 +20,7 @@ public:
 	void startAppend();
 	~SPVNode();
 private:
-	void dispatch_response(string path, string incoming_address, unsigned int block_id, unsigned int count);
+	void dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id, unsigned int count);
 	void endAppend();
 	void startFiltering();
 };
