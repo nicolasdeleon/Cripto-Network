@@ -109,6 +109,8 @@ void interfaseEventGenerator::printMainMenu(void) {
 
 	ImGui::BeginChild("nodes", ImVec2(300, 400), true, ImGuiWindowFlags_None);
 
+
+	currentNodes = mySim->getNodes();
 	for (int i = 0; i < currentNodes.size(); i++)
 	{
 		ImGui::BulletText(currentNodes[i]->getAddress().c_str());
@@ -598,6 +600,11 @@ string interfaseEventGenerator::getFilename() { return filename; }
 void interfaseEventGenerator::pushBackEvent()
 {
 	guiEvents.push(new cEventBack);
+}
+
+void interfaseEventGenerator::pushCnxEvent() 
+{
+	guiEvents.push(new cEventManageConnections);;
 }
 
 
