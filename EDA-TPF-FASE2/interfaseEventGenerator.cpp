@@ -472,7 +472,7 @@ void interfaseEventGenerator::printChooseMode(void) {
 	}
 	
 	if (ImGui::Button("Modo appendix")) {
-		guiEvents.push(new cEventManageConnections);
+		guiEvents.push(new cEventBack);
 	}
 
 	if (ImGui::BeginPopupModal("PickupJSON", NULL, ImGuiWindowFlags_AlwaysAutoResize))
