@@ -30,6 +30,11 @@ public:
 	string getRequestAnswer(string address);
 	vector<GenericNode*> Nodes;
 	void giveAddress2Nodes(vector<string>& addss);
+	bool areFullReady();
+	void connectSPV();
+	vector<int> spvGenNodes;
+
+	
 	~Simulation();
 private:
 	string createAddress(string ip, int port);

@@ -47,6 +47,7 @@ public:
 	void giveAvailableNodes(vector<string>& genesisNodes);
 	virtual void startAppend() = 0;
 	virtual void endAppend() = 0;
+	virtual bool getState() = 0;
 
 protected:
 	vector<string> genesisNodes;

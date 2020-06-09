@@ -229,13 +229,14 @@ void interfaseEventGenerator::printMakingNode(void) {
 			}
 		}
 
-
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
+
 		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
 			ImGui::CloseCurrentPopup();
 			connecting_to.clear();
 		}
+
 		ImGui::EndPopup();
 	}
 
@@ -593,5 +594,10 @@ std::vector<std::string> interfaseEventGenerator::extract_keys(std::map<std::str
 }
 
 string interfaseEventGenerator::getFilename() { return filename; }
+
+void interfaseEventGenerator::pushBackEvent()
+{
+	guiEvents.push(new cEventBack);
+}
 
 

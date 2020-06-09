@@ -35,6 +35,14 @@ public:
 	void algoritmoParticular();
 	void doPolls();
 	void startAppend();
+	bool getState() {
+		if (currState == NodeState::NETW_CREATED) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
 	
 private:
 	

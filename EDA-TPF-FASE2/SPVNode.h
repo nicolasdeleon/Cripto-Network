@@ -19,6 +19,9 @@ public:
 	void doPolls();
 	void startAppend();
 	~SPVNode();
+	bool getState() {
+		return false;
+	};
 private:
 	void dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id, unsigned int count);
 	void endAppend();

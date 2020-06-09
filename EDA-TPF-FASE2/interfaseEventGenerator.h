@@ -68,6 +68,7 @@ class interfaseEventGenerator : public eventGenerator
 		currentNodes = mySim->getNodes();
 	}
 	string getFilename();
+	void pushBackEvent();
 	
 	private:
 

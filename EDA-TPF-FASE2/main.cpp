@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 
-enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, WelcomeScreen, dummyState};
+enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, WelcomeScreen, workGenesis, dummyState};
 
 using namespace std;
 class FSMImplementation : public genericFSM
@@ -16,13 +16,14 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-		const fsmCell fsmTable[5][5] = {
+		const fsmCell fsmTable[6][5] = {
 			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx							E_MakeTsx													
 			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)}},  //MainMenu
 			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)}},  //CreatingNode
 			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},		  {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
 			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		  {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}},	  //MakeTsx
-			{	{WelcomeScreen,TX(printWelcomeScreen)},	{WelcomeScreen,TX(dummyfunc)}, {MainMenu,TX(setupApendix)},		  {MainMenu,TX(setupGenesis)},	    {WelcomeScreen,TX(dummyfunc)}}	  //welcomeScreen
+			{	{WelcomeScreen,TX(printWelcomeScreen)},	{WelcomeScreen,TX(dummyfunc)}, {MainMenu,TX(setupApendix)},		  {MainMenu,TX(setupGenesis)},			{WelcomeScreen,TX(dummyfunc)}},	  //welcomeScreen
+			{   {workGenesis,TX(checkifReady)},	{workGenesis,TX(dummyfunc)},  {workGenesis,TX(dummyfunc)},		  {workGenesis,TX(dummyfunc)},	    {workGenesis,TX(dummyfunc)}}	  //welcomeScreen
 			};
 	
 	//The action routines for the FSM
@@ -80,10 +81,13 @@ class FSMImplementation : public genericFSM
 
 				sim->addNode("127.0.0.1", stoi(node), NodeType::FULL);
 			}
+
 			for (string node : creador["spv"]) {
 
-				sim->addNode("127.0.0.1", stoi(node), NodeType::SPV);
+				sim->spvGenNodes.push_back(stoi(node));
 			}
+
+			
 			vector<string> addresses = creador["full-nodes"];
 			sim->giveAddress2Nodes(addresses);
 
@@ -94,11 +98,18 @@ class FSMImplementation : public genericFSM
 		return;
 	}
 
+	void checkifReady() {
+		if (sim->areFullReady()) {
+			sim->connectSPV();
+			guiEvGen->pushBackEvent();
+		}
+	}
+
 	interfaseEventGenerator* guiEvGen;
 	Simulation* sim;
 
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],5,5, WelcomeScreen){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],5,6, WelcomeScreen){}
 	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
 		guiEvGen = guiEvGenerator;
 	}
