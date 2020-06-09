@@ -6,6 +6,8 @@ Simulation::Simulation()
 }
 
 
+
+
 Simulation::~Simulation() {
 	for (GenericNode* node : Nodes) {
 		if(node)
@@ -18,7 +20,7 @@ Simulation::~Simulation() {
 }
 
 
-bool Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
+GenericNode* Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
 	bool res = true;
 	if (port % 2) {
 		cout << "ESTO NO DEBERIA PASAR!! PUERTO IMPAR!!" << endl;
@@ -39,7 +41,7 @@ bool Simulation::addNode(string ip, unsigned int port, NodeType NodeType) {
 	}
 
 	Nodes.push_back(newNode);
-	return res;
+	return newNode;
 }
 
 void Simulation::addNodeAndStart(string ip, unsigned int port, NodeType NodeType) {
@@ -106,6 +108,13 @@ string Simulation::createAddress(string ip, int port) {
 	return address;
 }
 
+void Simulation::giveAddress2Nodes(vector<string>& addss)
+{
+	for (auto node : Nodes) {
+		node->giveAvailableNodes(addss);
+	}
+}
+
 void Simulation::startNodes() {
 	for (GenericNode* node : Nodes) {
 		// Itero por todos mis nodos y hago cosas tipo start()
@@ -117,9 +126,7 @@ void Simulation::startNodes() {
 void Simulation::doNodePolls() {
 	for (GenericNode* node : Nodes) {
 		// Itero por todos mis nodos y hago un poll
-		
-		node->getNodeIoContext().poll();
-		node->curlPoll();
+		node->doPolls();
 	}
 }
 
@@ -148,11 +155,96 @@ void Simulation::sendTransaction(string origin_adress, string target_adress, int
 	
 	int port = stoi(target_adress.substr(target_adress.find(":") + 1));
 	string ip = target_adress.substr(0, target_adress.find(":"));
-
 	
+	cout << target_adress << " " << amount;
+
 	for (GenericNode* node : Nodes) {
 		if (node->getAddress() == origin_adress) {
-			static_cast<FullNode*>(node)->sendTX("send_tx", ip, port, { amount }, { "32423" });;
+			static_cast<FullNode*>(node)->sendTX("send_tx", ip, port, { amount }, { "32423" });
+			
 		}
 	}
+}
+
+string Simulation::getRequestAnswer(string address) {
+	string answer = "Node not found";
+	for (GenericNode* node : Nodes) {
+		if (node->getAddress() == address) {
+			answer = node->getClientRequestAnswer();
+		}
+	}
+	return answer;
+}
+
+string get_address_ip(string& address) {
+	return address.substr(0, address.find(":"));
+}
+
+unsigned int get_address_port(string& addres) {
+	return 	stoi(addres.substr(addres.find(":") + 1));
+}
+
+bool Simulation::appendNode(string& my_ip, unsigned int& my_port, NodeType my_type, vector<string>& neighborhood) {
+	bool res = true;
+
+	if ((my_type == NodeType::FULL && neighborhood.size() < 1) ||
+		(my_type == NodeType::SPV && neighborhood.size() < 2)) {
+		res = false;
+		cout << "Cantidad de conexiones incorrectas para el tipo de nodo" << endl;
+	}
+
+	GenericNode* my_node = addNode(my_ip, my_port, my_type);
+	my_node->start();
+	
+	for (string neighbor : neighborhood) {
+		string neighbor_ip = get_address_ip(neighbor);
+		unsigned int neighbor_port = get_address_port(neighbor);
+		if (!createConnection(my_node->getIP(), my_node->getPort(), neighbor_ip, neighbor_port))
+			res = false;
+	}
+
+	if (!res) {
+		// si hasta aca hubo algun problema retorno para no pinguear a nadie
+		deleteNode(my_ip, my_port);
+		cout << "No se pudo appendear el nodo" << endl;
+		return res;
+	}
+	
+	my_node->startAppend();
+	
+	return res;
+}
+
+
+bool Simulation::areFullReady() {
+	bool ready = true;
+	for (auto node : Nodes) {
+		if (node->getType() == NodeType::FULL && !(node->getState())) {
+			ready = false;
+		}
+	}
+	return ready;
+}
+
+void Simulation::connectSPV()
+{
+		
+		GenericNode* node1, *node2;
+		do {
+			int randNum = rand() % Nodes.size();
+			node1 = Nodes[randNum];
+		} while (node1->getType() != NodeType::FULL);
+		do {
+			int randNum = rand() % Nodes.size();
+			node2 = Nodes[randNum];
+		} while (node2->getType() != NodeType::FULL || node1 == node2);
+
+		string MyIp = "127.0.0.1";
+		unsigned int myPort = static_cast<unsigned int>(spvGenNodes.back());
+		spvGenNodes.pop_back();
+
+		vector<string> neighborhood = { (node1->getIP() + ":" + to_string(node1->getPort())),
+										(node2->getIP() + ":" + to_string(node2->getPort())) };
+
+		appendNode(MyIp, myPort, NodeType::SPV, neighborhood);
 }

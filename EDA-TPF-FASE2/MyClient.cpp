@@ -7,10 +7,8 @@
 
 
 */
-MyClient::MyClient(std::string _ip, int _port) //crearlo con el local host
+MyClient::MyClient(std::string _ip, int _port) : ip(_ip), port(_port) //crearlo con el local host
 {
-	ip = _ip; //igualarlo a local post sino (hay un define) LOCALHOST
-	port = _port;
 	handler = curl_easy_init();
 	if (!handler)
 	{
@@ -31,25 +29,23 @@ MyClient::MyClient()
 
 MyClient::~MyClient()
 {
-	curl_multi_remove_handle(multiHandler, handler);
-	curl_easy_cleanup(handler);
-	curl_multi_cleanup(multiHandler);
+
 }
 
 void MyClient::methodGet(string _path, string out_ip, int out_port, string block_id, int count) //path vendria a ser lo que queres obtener
 {
-	metodo = GET; //de momento no lo uso, ver si es relevante
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
+	cout << url << endl;
 	configurateGETClient(out_port);
 	recibiendoInfo = 1;
 }
 
 void MyClient::methodPost(string _path, string out_ip, int out_port, json& to_send) //path vendria a ser lo que queres enviar
 {
-	metodo = POST; //de momento no lo uso, ver si es relevante
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path; //con la url le termino pasando que quiero que me devuelva
+	cout << url << endl;
 	configuratePOSTClient(out_port, to_send);
 	recibiendoInfo = 1;
 }
@@ -58,6 +54,8 @@ void MyClient::methodPost(string _path, string out_ip, int out_port, json& to_se
 //Configurates client.
 void MyClient::configurateGETClient(int out_port) {
 	answer.clear();
+	multiHandler = curl_multi_init();
+	handler = curl_easy_init();
 
 	//setea handler y multihandler
 	curl_multi_add_handle(multiHandler, handler);
@@ -84,6 +82,9 @@ void MyClient::configurateGETClient(int out_port) {
 void MyClient::configuratePOSTClient(int out_port, json& to_send) {
 	answer.clear();
 
+	multiHandler = curl_multi_init();
+	handler = curl_easy_init();
+
 	struct curl_slist* list = nullptr;
 
 	auxiliar = to_send.dump();
@@ -98,7 +99,6 @@ void MyClient::configuratePOSTClient(int out_port, json& to_send) {
 	//Le decimos a CURL que trabaje con credentials.
 	//string to_send_test = to_send.dump().c_str();
 	//cout << to_send_test
-	//curl_easy_setopt(handler, CURLOPT_POSTFIELDS, "hola");
 	curl_easy_setopt(handler, CURLOPT_POSTFIELDS, auxiliar.c_str());
 	curl_easy_setopt(handler, CURLOPT_POSTFIELDSIZE, auxiliar.size());
 
@@ -128,6 +128,7 @@ void MyClient::configuratePOSTClient(int out_port, json& to_send) {
 	curl_easy_setopt(handler, CURLOPT_WRITEDATA, &answer);
 }
 
+
 bool MyClient::performRequest(void)
 {
 	if (recibiendoInfo) {
@@ -142,13 +143,25 @@ bool MyClient::performRequest(void)
 			curl_easy_cleanup(handler);
 			curl_multi_cleanup(multiHandler);
 			janswer = json::parse(answer);
-			cout << "janswer == " << janswer << endl;
-			answer = "";		
+			answer = "";
 	}
-
+	
 	return true;
 }
 
+bool MyClient::waiting4response()
+{
+	return recibiendoInfo;
+}
+
+json MyClient::getAnswer() {
+	return janswer;
+}
+
+void MyClient::clearAnswer()
+{
+	janswer.clear();
+}
 
 
 //Callback with string as userData.

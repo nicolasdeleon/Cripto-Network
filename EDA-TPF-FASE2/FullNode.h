@@ -3,21 +3,71 @@
 #include <string>
 #include <iostream>
 
+#include <allegro5/allegro.h>
+
+
+
 class FullNode : public GenericNode
 {
+	enum class NodeState {
+		IDLE,
+		COL_NETW_MEMBS,
+		WAITING_NETW_LAYOUT,
+		NETW_CREATED,
+		WAITING_PING_RESPONSE,
+		SENDING_LAYOUTS,
+		WAITING_LAYOUT_RESPONSE,
+		APPENDING
+	};
+
+	enum class NodeEvents {
+		TIMEOUT,
+		NETW_NOT_READY,
+		NETW_READY_PING,
+		PING
+	};
+
 public:
 	FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port);
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant);
 	~FullNode();
-	void sendTX(string path, string outIp, int outPort, vector<int> amounts, vector<string> publicIds);
+	void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant);
+	void sendTX(std::string path, std::string outIp, int outPort, vector<int> amounts, vector<std::string> publicIds);
+	void algoritmoParticular();
+	void doPolls();
+	void startAppend();
+	bool getState() {
+		if (currState == NodeState::NETW_CREATED) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+	
 private:
-	void sendMklBlock(string path, string outIp, int outPort, string blockId, int tx_pos);
-	void sendFilter(string path, string outIp, int outPort);
-	void sendBlock(string path_, string outIp, int outPort, string blockId);
-	void getBlocks(string path_, string outIp, int outPort, string blockId, int numBlocks);
-	string hexCodexASCII(unsigned int number);
+	
+	void executeLayout();
+	vector<NodeInfo> pingedNodes;
+	void pingNodes();
+	NodeState currState;
+	bool es_conexo(void);
+	void sendMklBlock(std::string path, std::string outIp, int outPort, std::string blockId, int tx_pos);
+	void sendFilter(std::string path, std::string outIp, int outPort);
+	void sendBlock(std::string path_, std::string outIp, int outPort, std::string blockId);
+	void getBlocks(std::string path_, std::string outIp, int outPort, std::string blockId, int numBlocks);
+	void dispatch_response(std::string path, std::string incoming_address, json& incoming_json, unsigned int block_id = 0, unsigned int count = 0);
+	std::string hexCodexASCII(unsigned int number);
 	unsigned int generateID(unsigned char* str);
-	vector<string> makeMerklePath(int blockNumber, string txid);
-
+	void endAppend();
+	vector<std::string> makeMerklePath(int blockNumber, std::string txid);
 	json to_send;
+	json layout;
+	ALLEGRO_TIMER* timer;
+	ALLEGRO_EVENT_QUEUE* queue;
+	string pingingNodeAdress;
+	int countdown;
 };
+
+
+
+

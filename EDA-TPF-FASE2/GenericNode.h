@@ -7,11 +7,23 @@
 #include <vector>
 #include "MyClient.h"
 
+#define REMOVE "REMOVE"
 #define REQUEST_BUFFER_LENGTH 700
-#define AMOUNT_OF_PATHS 5
+#define AMOUNT_OF_PATHS 10
+#define TIME_OUT 5000
+
+enum class NodeType { FULL, SPV };
+
+typedef struct nodeInfo {
+	string ip;
+	int puerto;
+	int connections = 0;
+	bool visitado = false;
+	vector<int> conectedWith;
+} NodeInfo;
 
 using message_id = unsigned int;
-enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER };
+enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADER, GET_BLOCKS, FILTER, PING };
 
 class GenericNode {
 public:
@@ -25,15 +37,20 @@ public:
 	std::string getIP();
 	std::string getAddress();
 	boost::asio::io_context& getNodeIoContext();
-	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id = 0, unsigned int cant = 0) = 0;
+	virtual void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id = 0, unsigned int cant = 0)=0;
 	void setPort(unsigned int PORT = 80);
 	void curlPoll();
-	
+	string getClientRequestAnswer();
+	NodeType getType();
+	//virtual void algoritmoParticular(void);
+	virtual void doPolls() = 0;
+	void giveAvailableNodes(vector<string>& genesisNodes);
+	virtual void startAppend() = 0;
+	virtual void endAppend() = 0;
+	virtual bool getState() = 0;
 
 protected:
-	std::vector<std::string> permitedPaths;
-	std::map<std::string, std::string> answers;
-	MyClient client;
+	vector<string> genesisNodes;
 	std::string createAddress(std::string ip, int port);
 	void listen_connection();
 	void answer(std::string incoming_address);
@@ -45,13 +62,18 @@ protected:
 	void shutdown_open_sockets();
 	void shut_down_reciever_socket();
 	void shutdown_socket_for_connection(std::string incoming_address);
-	void dispatch(string path, string incoming_address, unsigned int block_id = 0, unsigned int count = 0);
-	void parseHtmlRequested();
+	virtual void dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id = 0, unsigned int count = 0) = 0;
+	string parseEndPoint(char* str);
+	unsigned int parseBlockId(char* str);
+	unsigned int parseCount(char* str);
+	NodeType type;
+	string get_address_ip(string& address);
 
+	unsigned int get_address_port(string& address);
+	json incoming_json;
 
 	std::string wrap_package(string json_string);
 
-	std::string html_requested;
 	std::map<std::string, std::vector<unsigned char>> requests;
 	
 	boost::asio::io_context& context_;
@@ -59,11 +81,16 @@ protected:
 	boost::asio::ip::tcp::socket* handler_socket;
 	unsigned int port;
 	std::string ip;
-	std::string address;
 	std::map<std::string, boost::asio::ip::tcp::socket*> connections;
-	std::string counter, block_id, path;
+	
+	std::vector<std::string> permitedPaths;
+	std::map<std::string, std::string> answers;
+	MyClient client;
 
 	json blockChain;
+
+	std::map<string, boost::asio::ip::tcp::socket*>::iterator neighbour_iterator;
+	vector<string> remove_address;
 
 };
 

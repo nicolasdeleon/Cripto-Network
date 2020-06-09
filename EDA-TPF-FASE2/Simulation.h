@@ -6,12 +6,12 @@
 #include <vector>
 
 using namespace std;
-enum class NodeType { FULL, SPV };
+
 
 class Simulation {
 public:
 	Simulation();
-	bool addNode(string ip, unsigned int port, NodeType NodeType);
+	GenericNode* addNode(string ip, unsigned int port, NodeType NodeType);
 	void addNodeAndStart(string ip, unsigned int port, NodeType NodeType);
 	void sendMessageFromNode2Node(
 		string ip_origen, 
@@ -25,13 +25,22 @@ public:
 	bool deleteConnection(string origin_adress, string destiny_address);
 	void startNodes();
 	void doNodePolls();
+	bool appendNode(string& my_ip, unsigned int& my_port, NodeType my_type, vector<string>& neighborhood);
 	vector<GenericNode*> getNodes();
+	string getRequestAnswer(string address);
+	vector<GenericNode*> Nodes;
+	void giveAddress2Nodes(vector<string>& addss);
+	bool areFullReady();
+	void connectSPV();
+	vector<unsigned int> spvGenNodes;
+
+	
 	~Simulation();
 private:
 	string createAddress(string ip, int port);
-
-	vector<GenericNode*> Nodes;
 	vector<boost::asio::io_context*> contexts;
+
+
 };
 
 
