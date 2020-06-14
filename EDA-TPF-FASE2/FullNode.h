@@ -44,7 +44,7 @@ public:
 			return false;
 		}
 	};
-	
+	json getBlockChain_FULL(void);
 private:
 	
 	void executeLayout();

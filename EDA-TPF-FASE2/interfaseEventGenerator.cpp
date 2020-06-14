@@ -25,6 +25,7 @@ interfaseEventGenerator::interfaseEventGenerator() {
 			imguiInit();
 		}
 	}
+	notParsed = true;
 }
 
 bool interfaseEventGenerator::imguiInit(void)
@@ -96,40 +97,34 @@ void interfaseEventGenerator::printMainMenu(void) {
 	ImGui_ImplAllegro5_NewFrame();
 	ImGui::NewFrame();
 
-
 	ImGui::SetNextWindowPos(ImVec2(0, 0));
 	ImGui::SetNextWindowSize(ImVec2(SIZE_SCREEN_X, SIZE_SCREEN_X));
 
 	ImGui::Begin("EDAcoin", 0, 0);
-
 	//bool show_demo_window = true;
 	//ImGui::ShowDemoWindow(&show_demo_window);
-
 	ImGui::Text("Current Local Nodes: ");
 
 	ImGui::BeginChild("nodes", ImVec2(300, 400), true, ImGuiWindowFlags_None);
-
-
 	currentNodes = mySim->getNodes();
 	for (int i = 0; i < currentNodes.size(); i++)
 	{
 		ImGui::BulletText(currentNodes[i]->getAddress().c_str());
 	}
-	
 	ImGui::EndChild();
 
 	if (ImGui::Button("Manage Nodes")) {
 		guiEvents.push(new cEventCreateNodeScreen);
 	}
-
 	ImGui::SameLine();
-
+	if (ImGui::Button("Info")) {
+		guiEvents.push(new cEventInfo);
+	}
+	ImGui::SameLine();
 	if (ImGui::Button("Manage Node Connections")) {
 		guiEvents.push(new cEventManageConnections);
 	}
-
 	ImGui::SameLine();
-
 	if (ImGui::Button("Make new transacion")) {
 		guiEvents.push(new cEventMakeTsx);
 	}
@@ -138,15 +133,205 @@ void interfaseEventGenerator::printMainMenu(void) {
 
 	//Rendering
 	ImGui::Render();
-
 	al_clear_to_color(al_map_rgb(211, 211, 211));
-
-
 	ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
-
-
 	al_flip_display();
 }
+
+void interfaseEventGenerator::printInfoWindow(void) {
+	//tuve que hacer esto porque sino tardaba mucho tiempo en correr por el for que viene despues, si se quiere probar reemplazar esto en donde diga blockchainlocal.
+	static json blockchainlocal = mySim->Nodes[MY_NODE_FULL]->getBlockChain();  
+	static POPS caso = POPS::Default;
+	static string errorString = "No Hubo Error";
+	ImGui_ImplAllegro5_NewFrame();
+	ImGui::NewFrame();
+	if (notParsed){
+		blockchainHandler.parseallOk(mySim->Nodes[MY_NODE_FULL]->getstr(), &errorString);
+		notParsed = false;
+	}
+
+	ImGui::SetNextWindowPos(ImVec2(0, 0));
+	ImGui::SetNextWindowSize(ImVec2(SIZE_SCREEN_X, SIZE_SCREEN_X));
+
+	ImGui::Begin("Informacion", 0, 0);
+	static int radio_button=-1;
+	for (int i = 0; i < blockchainlocal.size(); i++){
+		string blockId = blockchainlocal[i]["blockid"].get<string>();
+		ImGui::RadioButton(blockId.c_str(), &radio_button, i);
+	}
+
+	if (ImGui::Button("Information"))
+	{
+		if (radio_button != -1) {
+			showBlockInfo(radio_button);
+			caso = POPS::Info;
+		}
+		else {
+			//sin esta parte daria un error al querer leer filename con nada guardado.
+			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+			errorString = "Select a radioButton to continue\n";
+			caso = POPS::Failed;
+		}
+		
+	}
+
+	if (ImGui::Button("Calcular el Merkle root"))
+	{
+
+		if (radio_button != -1) {
+			caso = POPS::Merkle;
+		}
+		else {
+			//sin esta parte daria un error al querer leer filename con nada guardado.
+			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+			errorString = "Select a radioButton to continue\n";
+			caso = POPS::Failed;
+		}
+	}
+
+	if (ImGui::Button("Validar el Merkle root"))
+	{
+
+		if (radio_button != -1) {
+			caso = POPS::ValidateMerkle;
+		}
+		else {
+			//sin esta parte daria un error al querer leer filename con nada guardado.
+			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+			errorString = "Tenes que seleccionar un radio button antes de clickear el boton\n";
+			caso = POPS::Failed;
+		}
+
+	}
+
+	if (ImGui::Button("Merkle Tree"))
+	{
+
+		if (radio_button != -1) {
+			vector<vector<string>> tree = blockchainHandler.makeMerkleTree(radio_button);
+			printTree(tree);
+		}
+		else {
+			//sin esta parte daria un error al querer leer filename con nada guardado.
+			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+			errorString = "Tenes que seleccionar un radio button antes de clickear el boton\n";
+			caso = POPS::Failed;
+		}
+	}
+
+	if (displayTree.show) {
+		//ImGui::SetNextWindowPos(ImVec2(400, 10));  //lo quite por conveniencia podemos ponerlo despues pero en una pos mas comoda
+		ImGui::SetNextWindowSize(ImVec2(500, 450));
+		ImGui::Begin("Merkel Tree", 0, 0);
+
+		ImGui::BeginChild("Merkle Tree", ImVec2(470, 370), true, ImGuiWindowFlags_None);
+		const char* tree = displayTree.tree.c_str();
+		ImGui::TextUnformatted(tree, tree + displayTree.tree.size());
+		ImGui::EndChild();
+
+
+		if (ImGui::Button("Close")){
+			displayTree.show = false;
+		}
+		ImGui::End();
+	}
+
+
+	if (ImGui::Button("Volver"))
+	{
+		guiEvents.push(new cEventBack);
+	}
+
+	switch(caso)
+	{
+	case POPS::Info:
+			ImGui::OpenPopup("Block Info");
+			if (ImGui::BeginPopupModal("Block Info", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Text(displayInfo.blockId.c_str());
+				ImGui::Text(displayInfo.previousBlockId.c_str());
+				ImGui::Text(displayInfo.NTransactions.c_str());
+				ImGui::Text(displayInfo.BlockNumber.c_str());
+				ImGui::Text(displayInfo.nonce.c_str());
+				if (ImGui::Button("Ok", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); caso = POPS::Default; }
+				ImGui::EndPopup();
+			}
+			break;
+	case POPS::Merkle:
+		ImGui::OpenPopup("Merkle root");
+
+		if (ImGui::BeginPopupModal("Merkle root", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+				string ourMakleRoot = blockchainHandler.makeMerkleTree(radio_button).back().back();
+				ImGui::Text(("Nuestra merkle root: " + ourMakleRoot).c_str());
+				ImGui::Text(("La merkle root del bloque: " + blockchainHandler.getMerkleroot()).c_str());
+				ImGui::Separator();
+			if (ImGui::Button("OK", ImVec2(120, 0)))
+			{
+				caso = POPS::Default;
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
+		break;
+	case POPS::ValidateMerkle:
+		ImGui::OpenPopup("Merkle root");
+
+		if (ImGui::BeginPopupModal("Merkle root", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			string ourMakleRoot = blockchainHandler.makeMerkleTree(radio_button).back().back();
+			string blockMakleRoot = blockchainHandler.getMerkleroot();
+
+			if (ourMakleRoot == blockMakleRoot) 
+			{
+				ImGui::Text("La makleroot del bloque es correcta!");
+			}
+			else 
+			{
+				ImGui::Text("La makleroot del bloque NO es correcta!");
+			}
+		if (ImGui::Button("OK", ImVec2(120, 0)))
+		{
+			caso = POPS::Default;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::EndPopup();
+		}
+		break;
+
+	case POPS::Default:
+		break;
+
+	case POPS::Failed:
+		ImGui::OpenPopup("Failed");
+
+		if (ImGui::BeginPopupModal("Failed", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text(errorString.c_str());
+			ImGui::Separator();
+
+			if (ImGui::Button("OK", ImVec2(120, 0)))
+			{
+				errorString = "";
+				caso = POPS::Default;
+				ImGui::CloseCurrentPopup();
+			}
+			ImGui::EndPopup();
+		}
+		break;
+	default:
+		break;
+	}
+
+	ImGui::End();
+
+	//Rendering
+	ImGui::Render();
+	al_clear_to_color(al_map_rgb(211, 211, 211));
+	ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
+	al_flip_display();
+}
+
 
 void interfaseEventGenerator::printMakingNode(void) {
 	currentNodes = mySim->getNodes();
@@ -159,7 +344,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 	ImGui::Begin("EDAcoin", 0, 0);
 
 	ImGui::BeginChild(".json files in current folder", ImVec2(300, 400), true, ImGuiWindowFlags_None);
-	
+
 	static int checked = -1;
 
 	for (int i = 0; i < currentNodes.size(); i++)
@@ -180,7 +365,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 		static int port;
 		ImGui::InputInt("Node port", &port);
 
-		
+
 		static int NType = 0;
 
 		ImGui::RadioButton("Full Node", &NType, 0);
@@ -215,7 +400,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 		for (string address : connecting_to) {
 			ImGui::Text(address.c_str());
 		}
-		
+
 		if (ImGui::Button("OK", ImVec2(120, 0))) {
 			if (!(port % 2)) {
 				string ip = "127.0.0.1";
@@ -234,13 +419,41 @@ void interfaseEventGenerator::printMakingNode(void) {
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
 
-		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
+		if (ImGui::Button("Cancel", ImVec2(120, 0))) {
 			ImGui::CloseCurrentPopup();
 			connecting_to.clear();
 		}
 
 		ImGui::EndPopup();
 	}
+
+	//if (ImGui::Button("Info") && checked != -1) {
+	//	guiEvents.push(new cEventCreateNodeScreen);
+	////ImGui::OpenPopup("Info");
+	//}
+
+	//if (ImGui::BeginPopupModal("Info", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+	//{
+	//	static int radio_button;
+	//	for (int i = 0; i < mySim->Nodes[MY_NODE_FULL]->getBlockChain().size(); i++)
+	//	{
+	//		string blockId = mySim->Nodes[MY_NODE_FULL]->getBlockChain()[i]["blockid"].get<string>();
+	//		ImGui::RadioButton(blockId.c_str(), &radio_button, i);
+	//	}
+
+	//	showBlockInfo(radio_button);
+	//	ImGui::Text(displayInfo.blockId.c_str());
+	//	ImGui::Text(displayInfo.previousBlockId.c_str());
+	//	ImGui::Text(displayInfo.NTransactions.c_str());
+	//	ImGui::Text(displayInfo.BlockNumber.c_str());
+	//	ImGui::Text(displayInfo.nonce.c_str());
+	//	/*if (ImGui::Button("Seleccionar otra block chain")) {
+	//		EventoActual = Event::BackToMainMenu;
+	//		eventHappened = true;
+	//	}*/
+	//	if (ImGui::Button("Cancel", ImVec2(120, 0))) { ImGui::CloseCurrentPopup(); }
+	//	ImGui::EndPopup();
+	//}
 
 	if (ImGui::Button("Delete Node") && checked != -1)
 		ImGui::OpenPopup("Del Node");
@@ -275,6 +488,16 @@ void interfaseEventGenerator::printMakingNode(void) {
 	ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
 
 	al_flip_display();
+}
+
+
+void interfaseEventGenerator::showBlockInfo(int index) {
+	displayInfo.blockId = "Block Id: " + mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["blockid"].get<string>();
+	displayInfo.previousBlockId = "Previous block id: " + mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["previousblockid"].get<string>();
+	displayInfo.NTransactions = "Number of transactions: " + to_string(mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["nTx"].get<int>());
+	displayInfo.BlockNumber = "Block number: " + to_string(index);
+	displayInfo.nonce = "Nonce: " + to_string(mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["nonce"].get<int>());
+	displayInfo.show = true;
 }
 
 void interfaseEventGenerator::printManageConnections(void) {
@@ -610,3 +833,28 @@ void interfaseEventGenerator::pushCnxEvent()
 }
 
 
+void interfaseEventGenerator::printTree(vector<vector<string>> Tree) {
+	int H = Tree[0].size() * 2;
+	int W = Tree.size() * 2;
+	vector<vector<string>> stringMap(H, vector<string>(W, "     "));
+	displayTree.tree = "";
+	displayTree.show = true;
+	float counter = H;
+	for (int i = 0; i < Tree.size(); i++) {
+		counter = counter / 2;
+		int offset = 0;
+		for (int j = 0; j < Tree[Tree.size() - i - 1].size(); j++) {
+			if (!((int(counter) * (j + 1) + offset) % (int(counter) * 2)))
+				offset = offset + counter;
+			stringMap[counter * (j + 1) + offset][i * 2] = "---" + Tree[Tree.size() - i - 1][j];
+		}
+	}
+
+	for (int i = 0; i < H; i++) {
+		for (int j = 0; j < W; j++) {
+			displayTree.tree += stringMap[i][j];
+		}
+		displayTree.tree += "\n\r";
+	}
+
+}

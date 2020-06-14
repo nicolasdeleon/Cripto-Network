@@ -12,6 +12,7 @@
 #define AMOUNT_OF_PATHS 10
 #define TIME_OUT 5000
 
+
 enum class NodeType { FULL, SPV };
 
 typedef struct nodeInfo {
@@ -48,6 +49,8 @@ public:
 	virtual void startAppend() = 0;
 	virtual void endAppend() = 0;
 	virtual bool getState() = 0;
+	string getstr(void);
+	json getBlockChain(void);
 
 protected:
 	vector<string> genesisNodes;
@@ -68,7 +71,7 @@ protected:
 	unsigned int parseCount(char* str);
 	NodeType type;
 	string get_address_ip(string& address);
-
+	string str;
 	unsigned int get_address_port(string& address);
 	json incoming_json;
 

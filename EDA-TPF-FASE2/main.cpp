@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 
-enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, WelcomeScreen, workGenesis, dummyState};
+enum implStates: stateTypes {MainMenu, CreatingNode, ManageConnections, MakeTsx, WelcomeScreen, workGenesis, InformationWindow, dummyState};
 
 using namespace std;
 class FSMImplementation : public genericFSM
@@ -16,14 +16,15 @@ class FSMImplementation : public genericFSM
 	private:
 		
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
-		const fsmCell fsmTable[6][5] = {
-			//  E_Draw							    E_CreateNode                       E_Back                             E_MngNodeCnx							E_MakeTsx													
-			{  	{MainMenu,TX(printMainMenu)},		{CreatingNode,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)}},  //MainMenu
-			{	{CreatingNode,TX(printMakingNode)},	{ManageConnections,TX(dummyfunc)}, {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)}},  //CreatingNode
-			{	{ManageConnections,TX(printManageCnx)},	{dummyState,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},		  {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)}},  //ManageConnections 
-			{	{MakeTsx,TX(printMakeTsx)},	        {MainMenu,TX(dummyfunc)},	       {MainMenu,TX(dummyfunc)},		  {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)}},	  //MakeTsx
-			{	{WelcomeScreen,TX(printWelcomeScreen)},	{WelcomeScreen,TX(dummyfunc)}, {MainMenu,TX(setupApendix)},		  {workGenesis,TX(setupGenesis)},			{WelcomeScreen,TX(dummyfunc)}},	  //welcomeScreen
-			{   {workGenesis,TX(checkifReady)},		{workGenesis,TX(dummyfunc)},	   {MainMenu,TX(dummyfunc)},		  {MainMenu,TX(dummyfunc)},	    {workGenesis,TX(dummyfunc)}}	  //welcomeScreen
+		const fsmCell fsmTable[7][6] = { //estados y E_ ese es el orden
+			//  E_Draw										E_CreateNode                        E_Back                             E_MngNodeCnx							E_MakeTsx										E_Info				
+			{  	{MainMenu,TX(printMainMenu)},				{CreatingNode,TX(dummyfunc)},	    {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)},						{InformationWindow,TX(dummyfunc)}},				//MainMenu
+			{	{CreatingNode,TX(printMakingNode)},			{ManageConnections,TX(dummyfunc)},  {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)},					{CreatingNode,TX(dummyfunc)}},						//CreatingNode
+			{	{ManageConnections,TX(printManageCnx)},		{dummyState,TX(dummyfunc)},			{MainMenu,TX(dummyfunc)},		  {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)},				{ManageConnections,TX(dummyfunc)}},					//ManageConnections 
+			{	{MakeTsx,TX(printMakeTsx)},					{MainMenu,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},		  {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)},						{MakeTsx,TX(dummyfunc)}},							//MakeTsx
+			{	{WelcomeScreen,TX(printWelcomeScreen)},		{WelcomeScreen,TX(dummyfunc)},		{MainMenu,TX(setupApendix)},	  {workGenesis,TX(setupGenesis)},		{WelcomeScreen,TX(dummyfunc)},					{WelcomeScreen,TX(dummyfunc)}},						//welcomeScreen
+			{   {workGenesis,TX(checkifReady)},				{workGenesis,TX(dummyfunc)},	    {MainMenu,TX(dummyfunc)},		  {MainMenu,TX(dummyfunc)},				{workGenesis,TX(dummyfunc)},					{workGenesis,TX(dummyfunc)}},						//workGenesis
+			{	{InformationWindow,TX(printInfoWindow)},	{InformationWindow,TX(dummyfunc)},	{MainMenu,TX(dummyfunc)},		  {InformationWindow,TX(dummyfunc)},	{InformationWindow,TX(dummyfunc)},				{InformationWindow,TX(dummyfunc)}}					//informationWindow			
 			};
 	
 	//The action routines for the FSM
@@ -41,6 +42,11 @@ class FSMImplementation : public genericFSM
 
 	void printMakingNode(genericEvent* ev) {
 		guiEvGen->printMakingNode();
+		return;
+	}
+
+	void printInfoWindow(genericEvent* ev) {
+		guiEvGen->printInfoWindow();
 		return;
 	}
 
@@ -111,7 +117,7 @@ class FSMImplementation : public genericFSM
 	Simulation* sim;
 
 	public:
-	FSMImplementation(): genericFSM(&fsmTable[0][0],5,6, WelcomeScreen){}
+	FSMImplementation(): genericFSM(&fsmTable[0][0],6,7, WelcomeScreen){} // E_ y estados ese es el orden
 	void referenceGuiEvGen(interfaseEventGenerator * guiEvGenerator) {
 		guiEvGen = guiEvGenerator;
 	}

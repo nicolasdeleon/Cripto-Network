@@ -649,6 +649,11 @@ void FullNode::pingNodes() {
 	client.methodPost("PING", "127.0.0.1", targetPort, emptyJson);
 }
 
+json FullNode::getBlockChain_FULL(void)
+{
+	return blockChain;
+}
+
 void FullNode::executeLayout()
 {
 	string thisNodesAddress = createAddress(ip, port);

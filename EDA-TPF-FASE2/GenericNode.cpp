@@ -31,7 +31,9 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	permitedPaths(AMOUNT_OF_PATHS),
 	neighbour_iterator(connections.begin())
 {
-
+	str = "blockChain32.json";
+	ifstream blocks_file(str, ifstream::binary);
+	blocks_file >> blockChain;
 }
 
 GenericNode::~GenericNode()
@@ -376,4 +378,15 @@ NodeType GenericNode::getType()
 void GenericNode::giveAvailableNodes(vector<string>& genNodes)
 {
 	genesisNodes = genNodes;
+}
+
+string GenericNode::getstr(void)
+{
+	return str;
+}
+
+json GenericNode::getBlockChain(void)
+{
+	return blockChain;
+
 }
