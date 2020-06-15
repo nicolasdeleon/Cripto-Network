@@ -18,8 +18,8 @@ class FSMImplementation : public genericFSM
 	#define TX(x) (static_cast<void (genericFSM::* )(genericEvent *)>(&FSMImplementation::x)) //casteo a funcion, por visual
 		const fsmCell fsmTable[7][6] = { //estados y E_ ese es el orden
 			//  E_Draw										E_CreateNode                        E_Back                             E_MngNodeCnx							E_MakeTsx										E_Info				
-			{  	{MainMenu,TX(printMainMenu)},				{CreatingNode,TX(dummyfunc)},	    {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)},						{InformationWindow,TX(dummyfunc)}},				//MainMenu
-			{	{CreatingNode,TX(printMakingNode)},			{ManageConnections,TX(dummyfunc)},  {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)},					{CreatingNode,TX(dummyfunc)}},						//CreatingNode
+			{  	{MainMenu,TX(printMainMenu)},				{CreatingNode,TX(dummyfunc)},	    {MainMenu,TX(dummyfunc)},	      {ManageConnections,TX(dummyfunc)},	{MakeTsx,TX(dummyfunc)},						{InformationWindow,TX(dummyfunc)}},					//MainMenu
+			{	{CreatingNode,TX(printMakingNode)},			{ManageConnections,TX(dummyfunc)},  {MainMenu,TX(dummyfunc)},		  {CreatingNode,TX(dummyfunc)},		    {CreatingNode,TX(dummyfunc)},					{InformationWindow,TX(dummyfunc)}},					//CreatingNode
 			{	{ManageConnections,TX(printManageCnx)},		{dummyState,TX(dummyfunc)},			{MainMenu,TX(dummyfunc)},		  {ManageConnections,TX(dummyfunc)},    {ManageConnections,TX(dummyfunc)},				{ManageConnections,TX(dummyfunc)}},					//ManageConnections 
 			{	{MakeTsx,TX(printMakeTsx)},					{MainMenu,TX(dummyfunc)},	        {MainMenu,TX(dummyfunc)},		  {MakeTsx,TX(dummyfunc)},		        {MakeTsx,TX(dummyfunc)},						{MakeTsx,TX(dummyfunc)}},							//MakeTsx
 			{	{WelcomeScreen,TX(printWelcomeScreen)},		{WelcomeScreen,TX(dummyfunc)},		{MainMenu,TX(setupApendix)},	  {workGenesis,TX(setupGenesis)},		{WelcomeScreen,TX(dummyfunc)},					{WelcomeScreen,TX(dummyfunc)}},						//welcomeScreen

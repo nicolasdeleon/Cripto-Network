@@ -26,6 +26,7 @@ interfaseEventGenerator::interfaseEventGenerator() {
 		}
 	}
 	notParsed = true;
+	makingChecked = -1;
 }
 
 bool interfaseEventGenerator::imguiInit(void)
@@ -117,10 +118,6 @@ void interfaseEventGenerator::printMainMenu(void) {
 		guiEvents.push(new cEventCreateNodeScreen);
 	}
 	ImGui::SameLine();
-	if (ImGui::Button("Info")) {
-		guiEvents.push(new cEventInfo);
-	}
-	ImGui::SameLine();
 	if (ImGui::Button("Manage Node Connections")) {
 		guiEvents.push(new cEventManageConnections);
 	}
@@ -140,13 +137,13 @@ void interfaseEventGenerator::printMainMenu(void) {
 
 void interfaseEventGenerator::printInfoWindow(void) {
 	//tuve que hacer esto porque sino tardaba mucho tiempo en correr por el for que viene despues, si se quiere probar reemplazar esto en donde diga blockchainlocal.
-	static json blockchainlocal = mySim->Nodes[MY_NODE_FULL]->getBlockChain();  
+	static json blockchainlocal = mySim->Nodes[makingChecked]->getBlockChain();
 	static POPS caso = POPS::Default;
 	static string errorString = "No Hubo Error";
 	ImGui_ImplAllegro5_NewFrame();
 	ImGui::NewFrame();
 	if (notParsed){
-		blockchainHandler.parseallOk(mySim->Nodes[MY_NODE_FULL]->getstr(), &errorString);
+		blockchainHandler.parseallOk(mySim->Nodes[makingChecked]->getstr(), &errorString);
 		notParsed = false;
 	}
 
@@ -345,11 +342,9 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 	ImGui::BeginChild(".json files in current folder", ImVec2(300, 400), true, ImGuiWindowFlags_None);
 
-	static int checked = -1;
-
 	for (int i = 0; i < currentNodes.size(); i++)
 	{
-		ImGui::RadioButton(currentNodes[i]->getAddress().c_str(), &checked, i);
+		ImGui::RadioButton(currentNodes[i]->getAddress().c_str(), &makingChecked, i);
 	}
 
 	ImGui::EndChild();
@@ -455,14 +450,19 @@ void interfaseEventGenerator::printMakingNode(void) {
 	//	ImGui::EndPopup();
 	//}
 
-	if (ImGui::Button("Delete Node") && checked != -1)
+	ImGui::SameLine();
+	if (ImGui::Button("Info") && makingChecked != -1) {
+		guiEvents.push(new cEventInfo);
+	}
+
+	if (ImGui::Button("Delete Node") && makingChecked != -1)
 		ImGui::OpenPopup("Del Node");
 
 	if (ImGui::BeginPopupModal("Del Node", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::Text("Are you sure? a node deletion is permanent!\n");
 		if (ImGui::Button("Yes", ImVec2(120, 0))) {
-			mySim->deleteNode(currentNodes[checked]->getIP(), currentNodes[checked]->getPort());
+			mySim->deleteNode(currentNodes[makingChecked]->getIP(), currentNodes[makingChecked]->getPort());
 			currentNodes = mySim->getNodes();
 			ImGui::CloseCurrentPopup();
 		}
@@ -492,11 +492,11 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 
 void interfaseEventGenerator::showBlockInfo(int index) {
-	displayInfo.blockId = "Block Id: " + mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["blockid"].get<string>();
-	displayInfo.previousBlockId = "Previous block id: " + mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["previousblockid"].get<string>();
-	displayInfo.NTransactions = "Number of transactions: " + to_string(mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["nTx"].get<int>());
+	displayInfo.blockId = "Block Id: " + mySim->Nodes[makingChecked]->getBlockChain()[index]["blockid"].get<string>();
+	displayInfo.previousBlockId = "Previous block id: " + mySim->Nodes[makingChecked]->getBlockChain()[index]["previousblockid"].get<string>();
+	displayInfo.NTransactions = "Number of transactions: " + to_string(mySim->Nodes[makingChecked]->getBlockChain()[index]["nTx"].get<int>());
 	displayInfo.BlockNumber = "Block number: " + to_string(index);
-	displayInfo.nonce = "Nonce: " + to_string(mySim->Nodes[MY_NODE_FULL]->getBlockChain()[index]["nonce"].get<int>());
+	displayInfo.nonce = "Nonce: " + to_string(mySim->Nodes[makingChecked]->getBlockChain()[index]["nonce"].get<int>());
 	displayInfo.show = true;
 }
 
@@ -525,7 +525,7 @@ void interfaseEventGenerator::printManageConnections(void) {
 	if (ImGui::Button("Cancel")) {
 		guiEvents.push(new cEventBack);
 	}	
-
+	
 	if (ImGui::Button("Create New Connection") && checked != -1)
 		ImGui::OpenPopup("New Connection");
 

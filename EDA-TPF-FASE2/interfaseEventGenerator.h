@@ -100,6 +100,7 @@ class interfaseEventGenerator : public eventGenerator
 	void showBlockInfo(int index);
 	void printTree(vector<vector<string>> Tree);
 	string filename;
+	int makingChecked;
 	bool failed;
 	bool print_SelectJsons(vector<string>& nombres);
 	vector<string> lookForJsonFiles(const char* directoryName);
