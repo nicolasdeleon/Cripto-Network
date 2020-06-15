@@ -71,22 +71,31 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 	response["status"] = "true";
 
 	if (path == "/eda_coin/send_block") {
+
+		/*aplicar flooding aca también*/
+
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_tx") {
-		cout << incoming_address << " $" << incoming_json.dump() << endl;
-	
-		if (latest_transaction.size() == 0
-			&& latest_transaction["txid"] != incoming_json["txid"] // validate transaction -> latest_transaction != incoming_json // es nueva!
-			&& 1 /* validate transaction -> previousBlockId == bloqueMasReciente // valida condicion 1
-					validate transaction -> MerkleRoot == makeMerkleRoot(incoming_json) // valida condicion 2 */
-			) {
-			// si valida todo, guardo y propago.
-			latest_transaction = incoming_json;
-			startFlooding();
-		}
+		cout << ip << ":" << port << incoming_json.dump() << endl;
+		
+		/*
+		1. Chequear que no ta haya llegado todavía esta transacción.
+			1.a Si no te llegó, guardarla e invocar a una función que reenvíe el mensaje a todos tus vecinos menos el que te la mandó.
+				La funcion parsea incoming json, se fija si es válida la transacción, y llama a sendTX para todos sus vecinos menos el que le mandó la TX. 
+			1.b Si ya la tenías no hacer nada 
+		*/
 
-		// Por ahora respondemos siempre esto, habria que paresear el contenido
+		/*
+		std::vector<std::string> interfaseEventGenerator::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
+		std::vector<std::string> retval;
+		for (auto const& element : input_map) {
+		retval.push_back(element.first);
+		}
+		return retval;
+		}
+		*/
+
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_merkle_block") {
@@ -223,16 +232,18 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 		to_send["txid"] = "7B857A14";
 		to_send["previousBlockId"] = "00000000";
 		to_send["vout"] = {};
-		for (int i = 0; i < nTxout; i++) {}
+		for (int i = 0; i < nTxout; i++) {
+			to_send["vout"].push_back(
+				{
+					{"amount", amounts[i]},
+					{"publicid", publicIds[i]}
+				}
+			);
+		}
+
+
 		to_send["vin"] = {};
-		to_send["vin"].push_back(
-			{
-				{ "blockid", "00000BDE" },
-				{ "outputIndex", 4 },
-				{ "signature", "000009B7" },
-				{ "txid", "00000EBA" }
-			}
-		);
+
 	}
 	else
 		to_send["status"] = "error";
@@ -240,7 +251,7 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 	string to_send_string = to_send.dump();
 
 	//cout << to_send.dump(1) << endl;
-	
+
 	client.methodPost(path, outIp, outPort, to_send);
 }
 
