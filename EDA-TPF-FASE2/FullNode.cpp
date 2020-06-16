@@ -36,8 +36,10 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	int i = (rand() % 990) + 10;
 	countdown = 10 * i;
 	al_start_timer(timer);
-
-	cout << port << "- countdown = " << countdown << "ms" << endl;
+	loTiene = false;
+	std::cout << port << "- countdown = " << countdown << "ms" << endl;
+	amount.clear();
+	publicid.clear();
 }
 
 // Funcion para enviar pedido desde el nodo Full
@@ -64,7 +66,7 @@ void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, js
 
 // Funcion que responde a un pedido desde el nodo Full
 void FullNode::dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id, unsigned int count) {
-	std::cout << "response_dispatch()" << std::endl;
+	//std::cout << "response_dispatch()" << std::endl;
 
 	json response;
 
@@ -77,8 +79,25 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_tx") {
-		cout << ip << ":" << port << incoming_json.dump() << endl;
-		
+		std::cout << ip << ":" << port << incoming_json.dump() << endl;
+		for (int i = 0; i < mensajesRecibidos.size() && loTiene == false; i++)
+		{
+			if (incoming_json.dump() == mensajesRecibidos[i])
+				loTiene = true;
+		}
+		if (loTiene == true)
+		{
+			std::cout << "ok soy " << ip << ":" << port << " ya lo tenia (me lo mando: " << incoming_address << ")" << endl;
+		}
+		else
+		{
+			std::cout << "ok soy " << ip << ":" << port << " guardare tu mensaje que viene de:" << incoming_address << endl;
+			mensajesRecibidos.push_back(incoming_json.dump());
+			parseIncoming(incoming_json);
+			keys_list = extract_keys(connections);
+			currState = NodeState::FLOODING;
+			//sendTx_to_neighbour(incoming_json);
+		}
 		/*
 		1. Chequear que no ta haya llegado todavía esta transacción.
 			1.a Si no te llegó, guardarla e invocar a una función que reenvíe el mensaje a todos tus vecinos menos el que te la mandó.
@@ -151,7 +170,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		}
 	}
 	else if (path == "/eda_coin/PING") {
-		cout << incoming_address << " pinged " << port << endl;
+		std::cout << incoming_address << " pinged " << port << endl;
 		switch (currState) {
 		case NodeState::IDLE:
 			response["status"] = "NETWORK_NOTREADY";
@@ -187,10 +206,40 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
 	}
 
-	std::cout << "Respuesta del servidor " << createAddress(ip, port) << " al pedido:" << endl << response.dump() << std::endl;
+	//std::cout << "Respuesta del servidor " << createAddress(ip, port) << " al pedido:" << endl << response.dump() << std::endl;
 	answers[incoming_address] = wrap_package(response.dump());
 
 }
+
+//Esta funcion te devuelve una lista con las keys del mapa que le pasas.
+std::vector<std::string> FullNode::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
+	std::vector<std::string> retval;
+	for (auto const& element : input_map) {
+		retval.push_back(element.first);
+	}
+	return retval;
+}
+
+bool FullNode::parseIncoming(json incoming_json)
+{
+	if (!incoming_json.empty()) { //chequea que no esté vacío así no crashea todo con el parser
+		for (int i = 0; i < incoming_json["tx"].size(); i++)
+		{
+			for (int j = 0; j < incoming_json["tx"]["vout"].size(); j++)
+			{
+				amount.push_back(incoming_json["tx"]["vout"][j]["amount"]); //esto podria fallar por castear string a int implicitamente revisar
+				publicid.push_back(incoming_json["tx"]["vout"][j]["publicid"]);
+			}
+		}
+		return true;
+	}
+	else
+	{
+		cout << "algo fallo en el parser (llego vacio)\n";
+		return false;
+	}
+}
+
 
 FullNode::~FullNode() {
 
@@ -216,7 +265,7 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 		}
 	}
 
-	cout << to_send_.dump() << endl;
+	//cout << to_send_.dump() << endl;
 	client.methodPost(path, outIp, outPort, to_send_);
 }
 
@@ -247,15 +296,11 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 	}
 	else
 		to_send["status"] = "error";
-
-	string to_send_string = to_send.dump();
-
-	//cout << to_send.dump(1) << endl;
-
+	
 	client.methodPost(path, outIp, outPort, to_send);
+	//string to_send_string = to_send.dump();
+	//cout << to_send.dump(1) << endl;
 }
-
-
 
 void FullNode::sendFilter(string path, string outIp, int outPort) {
 	json temp;
@@ -622,8 +667,32 @@ void FullNode::doPolls() {
 		}
 		break;
 		case NodeState::FLOODING:
-			endFlooding();
+			flood_transaction();
+			//endFlooding();
 		break;
+	}
+}
+
+void FullNode::flood_transaction()
+{
+	if (keys_list.size() != 0)
+	{
+		//tomo el elemento y lo saco de la lista
+		string elemento = keys_list.back();
+		keys_list.pop_back();
+		//parseo
+		stringstream check1(elemento);
+		string intermediate;
+		getline(check1, intermediate, ':');
+		string current_ip = intermediate;
+		getline(check1, intermediate, ':');
+		int current_port = stoi(intermediate);
+		//obtuve la info en current_ip y current_port ahora mando
+		std::cout << "ok soy " << ip << ":" << port << " envio a: " << current_ip << ":" << current_port << endl;
+		sendTX("send_tx", current_ip, current_port, amount, publicid);
+	}
+	else {
+		currState = NodeState::NETW_CREATED;
 	}
 }
 

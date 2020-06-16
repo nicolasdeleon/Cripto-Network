@@ -219,7 +219,7 @@ bool GenericNode::parse_request(string incoming_address) {
 	string path_requested;
 
 	std::string mystring(requests[incoming_address].begin(), requests[incoming_address].end());
-
+	requests[incoming_address].clear();
 	if (mystring.size() != 0
 		&& (mystring.find("GET") == 0 || mystring.find("POST") == 0)
 		&& mystring.find("HTTP/1.1") != mystring.npos)
@@ -261,6 +261,7 @@ bool GenericNode::parse_request(string incoming_address) {
 		// Node can handle request ?
 	if (std::find(permitedPaths.begin(), permitedPaths.end(), path_requested) != permitedPaths.end())
 	{
+		cout << endl <<endl << "hola me llego el mensaje desde \n" << incoming_address <<endl << endl;
 		dispatch_response(path_requested, incoming_address, incoming_json, block_id, count);
 	}
 	else {

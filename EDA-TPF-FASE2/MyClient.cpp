@@ -20,6 +20,7 @@ MyClient::MyClient(std::string _ip, int _port) : ip(_ip), port(_port) //crearlo 
 		Erorr_string = "No se pudo inicializar curl multi";
 	}
 	recibiendoInfo = 0;
+	answer = "";
 }
 
 MyClient::MyClient()
@@ -45,7 +46,7 @@ void MyClient::methodPost(string _path, string out_ip, int out_port, json& to_se
 {
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path; //con la url le termino pasando que quiero que me devuelva
-	cout << url << endl;
+	//cout << url << endl;
 	configuratePOSTClient(out_port, to_send);
 	recibiendoInfo = 1;
 }
@@ -142,6 +143,7 @@ bool MyClient::performRequest(void)
 	else if (answer != "") {
 			curl_easy_cleanup(handler);
 			curl_multi_cleanup(multiHandler);
+			cout << answer << endl;
 			janswer = json::parse(answer);
 			answer = "";
 	}

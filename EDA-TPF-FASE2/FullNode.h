@@ -2,7 +2,6 @@
 #include "GenericNode.h"
 #include <string>
 #include <iostream>
-
 #include <allegro5/allegro.h>
 
 
@@ -46,9 +45,11 @@ public:
 	};
 	json getBlockChain_FULL(void);
 private:
-	
+	std::vector<std::string> extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map);
 	void executeLayout();
+	void flood_transaction();
 	vector<NodeInfo> pingedNodes;
+	vector<std::string> keys_list;
 	void pingNodes();
 	NodeState currState;
 	bool es_conexo(void);
@@ -63,6 +64,11 @@ private:
 	void startFlooding();
 	void endFlooding();
 	vector<std::string> makeMerklePath(int blockNumber, std::string txid);
+	vector<std::string> mensajesRecibidos;
+	vector<int> amount;
+	vector<std::string> publicid;
+	bool loTiene;
+	bool parseIncoming(json incoming_json);
 	json to_send;
 	json layout;
 	ALLEGRO_TIMER* timer;
