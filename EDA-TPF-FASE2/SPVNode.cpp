@@ -3,7 +3,7 @@
 SPVNode::SPVNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
 	permitedPaths.push_back("/eda_coin/send_merkle_block");
-	permitedPaths.push_back("/eda_coin/send_tx");
+	//permitedPaths.push_back("/eda_coin/send_tx");
 	currState = NodeState::PASS;
 	type = NodeType::SPV;
 }
@@ -32,7 +32,7 @@ void SPVNode::send_request(
 
 // Funcion que responde a un pedido desde el nodo SPV
 void SPVNode::dispatch_response(string path, string incoming_address, json& incoming_json, unsigned int block_id, unsigned int count) {
-	std::cout << "response_dispatch()" << std::endl;
+	//std::cout << "response_dispatch()" << std::endl;
 
 	json response;
 

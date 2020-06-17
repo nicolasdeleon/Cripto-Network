@@ -532,8 +532,9 @@ void FullNode::doPolls() {
 			flood_transaction();
 		break;
 	case NodeState::WAITING_FLOOD_RESPONSE:
-		if (client.waiting4response()) {
-			string ans = client.getAnswer().dump(2);
+		if (!client.getAnswer().empty()) {
+			string s = client.getAnswer().dump(1);
+			client.clearAnswer();
 			currState = NodeState::FLOOD;
 		}
 		break;
