@@ -81,6 +81,8 @@ void MyClient::configurateGETClient(int out_port) {
 
 //Configurates client.
 void MyClient::configuratePOSTClient(int out_port, json& to_send) {
+	
+	
 	answer.clear();
 
 	multiHandler = curl_multi_init();

@@ -164,6 +164,7 @@
     <ClCompile Include="MyClient.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="SPVNode.cpp" />
+    <ClCompile Include="TXfloodRequest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blockchainHandler.h" />
@@ -183,6 +184,7 @@
     <ClInclude Include="MyClient.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="SPVNode.h" />
+    <ClInclude Include="TXfloodRequest.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

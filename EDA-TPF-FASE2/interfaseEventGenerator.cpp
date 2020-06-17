@@ -642,13 +642,13 @@ void interfaseEventGenerator::printMakeTsx(void) {
 		ImGui::Text("Please select the target node's IP and port:\n\n");
 		ImGui::Separator();
 
-		vector <string> keysVector = extract_keys(currentNodes[checked]->getConnections());
-
 		static int checkedCnx = -1;
 
-		for (int i = 0; i < keysVector.size(); i++)
+		for (int i = 0; i < currentNodes.size(); i++)
 		{
-			ImGui::RadioButton(keysVector[i].c_str(), &checkedCnx, i);
+			if (currentNodes[i]->getAddress() != currentNodes[checked]->getAddress()) {
+				ImGui::RadioButton(currentNodes[i]->getAddress().c_str(), &checkedCnx, i);
+			}	
 		}
 
 		ImGui::Text("Please select the size of the transaction: ");
@@ -657,12 +657,21 @@ void interfaseEventGenerator::printMakeTsx(void) {
 
 		if (ImGui::Button("OK", ImVec2(120, 0)) && checkedCnx != -1) {
 			
-			mySim->sendTransaction(currentNodes[checked]->getAddress(), keysVector[checkedCnx], amount);
+
+			vector<string> target_adresses;
+			target_adresses.push_back(currentNodes[checked]->getAddress());
+			vector<int> amounts;
+			amounts.push_back(amount);
+
+			mySim->sendTransaction(currentNodes[checked]->getAddress(), target_adresses, amounts);
 			ImGui::CloseCurrentPopup();
 			checkedCnx = -1;
 		}
+
+
 		ImGui::SetItemDefaultFocus();
 		ImGui::SameLine();
+
 		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
 			ImGui::CloseCurrentPopup(); 
 			checkedCnx = -1;

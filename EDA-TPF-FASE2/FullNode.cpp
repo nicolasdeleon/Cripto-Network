@@ -30,16 +30,14 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	currState = NodeState::IDLE;
 
 	al_init();
-	queue = al_create_event_queue();	
+	AlEvQueue = al_create_event_queue();	
 	timer = al_create_timer(0.01);
-	al_register_event_source(queue, al_get_timer_event_source(timer));
+	al_register_event_source(AlEvQueue, al_get_timer_event_source(timer));
 	int i = (rand() % 990) + 10;
 	countdown = 10 * i;
 	al_start_timer(timer);
 	loTiene = false;
 	std::cout << port << "- countdown = " << countdown << "ms" << endl;
-	amount.clear();
-	publicid.clear();
 }
 
 // Funcion para enviar pedido desde el nodo Full
@@ -79,41 +77,29 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_tx") {
-		std::cout << ip << ":" << port << incoming_json.dump() << endl;
-		for (int i = 0; i < mensajesRecibidos.size() && loTiene == false; i++)
+		//std::cout << ip << ":" << port << incoming_json.dump() << endl;
+
+	
+		bool alreadyGotIt = false;
+
+		for (int i = 0; i < mensajesRecibidos.size() && !alreadyGotIt; i++)
 		{
 			if (incoming_json.dump() == mensajesRecibidos[i])
-				loTiene = true;
+				alreadyGotIt = true;
 		}
-		if (loTiene == true)
-		{
-			std::cout << "ok soy " << ip << ":" << port << " ya lo tenia (me lo mando: " << incoming_address << ")" << endl;
-		}
-		else
+		if (!alreadyGotIt)
 		{
 			std::cout << "ok soy " << ip << ":" << port << " guardare tu mensaje que viene de:" << incoming_address << endl;
 			mensajesRecibidos.push_back(incoming_json.dump());
 			parseIncoming(incoming_json);
-			keys_list = extract_keys(connections);
-			currState = NodeState::FLOODING;
-			//sendTx_to_neighbour(incoming_json);
+				
 		}
-		/*
-		1. Chequear que no ta haya llegado todavía esta transacción.
-			1.a Si no te llegó, guardarla e invocar a una función que reenvíe el mensaje a todos tus vecinos menos el que te la mandó.
-				La funcion parsea incoming json, se fija si es válida la transacción, y llama a sendTX para todos sus vecinos menos el que le mandó la TX. 
-			1.b Si ya la tenías no hacer nada 
-		*/
-
-		/*
-		std::vector<std::string> interfaseEventGenerator::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
-		std::vector<std::string> retval;
-		for (auto const& element : input_map) {
-		retval.push_back(element.first);
+		else
+		{
+			std::cout << "ok soy " << ip << ":" << port << " ya lo tenia (me lo mando: " << incoming_address << ")" << endl;
 		}
-		return retval;
-		}
-		*/
+		
+		
 
 		response["result"] = "null";
 	}
@@ -211,26 +197,26 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 
 }
 
-//Esta funcion te devuelve una lista con las keys del mapa que le pasas.
-std::vector<std::string> FullNode::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
-	std::vector<std::string> retval;
-	for (auto const& element : input_map) {
-		retval.push_back(element.first);
-	}
-	return retval;
-}
 
 bool FullNode::parseIncoming(json incoming_json)
 {
+	vector<int> ams;
+	vector<string> ids;
+
 	if (!incoming_json.empty()) { //chequea que no esté vacío así no crashea todo con el parser
-		for (int i = 0; i < incoming_json["tx"].size(); i++)
-		{
-			for (int j = 0; j < incoming_json["tx"]["vout"].size(); j++)
+
+		cout << incoming_json.dump(2) << endl;
+			for (int j = 0; j < incoming_json["vout"].size(); j++)
 			{
-				amount.push_back(incoming_json["tx"]["vout"][j]["amount"]); //esto podria fallar por castear string a int implicitamente revisar
-				publicid.push_back(incoming_json["tx"]["vout"][j]["publicid"]);
+				ams.push_back(incoming_json["vout"][j]["amount"]); //esto podria fallar por castear string a int implicitamente revisar
+				ids.push_back(incoming_json["vout"][j]["publicid"]);
 			}
-		}
+
+			vector<string> neighbors = extract_keys(connections);
+
+			TXfloodRequest newRequest(ams, ids, neighbors);
+			pendingFloodRequests.push(newRequest);
+
 		return true;
 	}
 	else
@@ -506,7 +492,7 @@ void FullNode::algoritmoParticular(void)
 										  { "target2", createAddress(pingedNodes[1].ip, pingedNodes[1].puerto)} });
 		}
 
-		cout << "json de la red:" << endl << endl << layoutJson.dump(2) << endl;
+		//cout << "json de la red:" << endl << endl << layoutJson.dump(2) << endl;
 
 		//compruebo que sea conexo el grafo
 		//es_conexo()
@@ -561,11 +547,22 @@ void FullNode::doPolls() {
 	static bool b00l = true;
 	switch (currState) {
 	case NodeState::NETW_CREATED:
+		if (pendingFloodRequests.size()) {
+			currState = NodeState::FLOOD;
+		}
+		break;
+	case NodeState::FLOOD:
+			flood_transaction();
+		break;
+	case NodeState::WAITING_FLOOD_RESPONSE:
+		if (!client.getAnswer().empty()) {
+			currState = NodeState::FLOOD;
+		}
 		break;
 	case NodeState::IDLE:
 		ALLEGRO_EVENT ev;
 
-		if (al_get_next_event(queue, &ev) && ev.type == ALLEGRO_EVENT_TIMER) {
+		if (al_get_next_event(AlEvQueue, &ev) && ev.type == ALLEGRO_EVENT_TIMER) {
 
 			countdown -= 10;
 
@@ -575,8 +572,8 @@ void FullNode::doPolls() {
 				if (timer) {
 					al_destroy_timer(timer);
 				}
-				if (queue) {
-					al_destroy_event_queue(queue);
+				if (AlEvQueue) {
+					al_destroy_event_queue(AlEvQueue);
 				}
 				currState = NodeState::COL_NETW_MEMBS;
 			}
@@ -598,7 +595,7 @@ void FullNode::doPolls() {
 			string dummy = client.getAnswer()["status"];
 
 			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress << endl;
+				//cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress << endl;
 				addConnection(pingingNodeAdress);
 				algoritmoParticular();
 				currState = NodeState::SENDING_LAYOUTS;
@@ -666,20 +663,14 @@ void FullNode::doPolls() {
 			}
 		}
 		break;
-		case NodeState::FLOODING:
-			flood_transaction();
-			//endFlooding();
-		break;
 	}
 }
 
 void FullNode::flood_transaction()
 {
-	if (keys_list.size() != 0)
-	{
-		//tomo el elemento y lo saco de la lista
-		string elemento = keys_list.back();
-		keys_list.pop_back();
+	if (!pendingFloodRequests.front().empty()) {
+
+		string elemento = pendingFloodRequests.front().get_next_neighbor();
 		//parseo
 		stringstream check1(elemento);
 		string intermediate;
@@ -687,11 +678,15 @@ void FullNode::flood_transaction()
 		string current_ip = intermediate;
 		getline(check1, intermediate, ':');
 		int current_port = stoi(intermediate);
-		//obtuve la info en current_ip y current_port ahora mando
+
 		std::cout << "ok soy " << ip << ":" << port << " envio a: " << current_ip << ":" << current_port << endl;
-		sendTX("send_tx", current_ip, current_port, amount, publicid);
+		sendTX("send_tx", current_ip, current_port, pendingFloodRequests.front().get_amounts(), pendingFloodRequests.front().get_ids());
+		currState = NodeState::WAITING_FLOOD_RESPONSE;
+
 	}
+
 	else {
+		pendingFloodRequests.pop();
 		currState = NodeState::NETW_CREATED;
 	}
 }
@@ -725,7 +720,7 @@ void FullNode::pingNodes() {
 
 	pingingNodeAdress = createAddress("127.0.0.1", targetPort);
 
-	cout << createAddress(ip, port) << " tried to ping " << targetPort << endl;
+	//cout << createAddress(ip, port) << " tried to ping " << targetPort << endl;
 	client.methodPost("PING", "127.0.0.1", targetPort, emptyJson);
 }
 
@@ -757,7 +752,7 @@ void FullNode::startAppend() {
 	std::string ping_address = neighbour_iterator->first;
 	string ping_ip = get_address_ip(ping_address);
 	unsigned int ping_port = get_address_port(ping_address);
-	cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+	//cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
 	client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
 }
 
@@ -769,7 +764,7 @@ void FullNode::endAppend() {
 	}
 	unsigned int node_to_connect = rand() % connections.size() + 0;
 	for (unsigned int i = 0; i < node_to_connect; i++) {
-			neighbour_iterator++;
+		neighbour_iterator++;
 	}
 
 	string node_to_connect_addres = neighbour_iterator->first;
@@ -782,23 +777,7 @@ void FullNode::endAppend() {
 	neighbour_iterator = connections.begin();
 }
 
-void FullNode::startFlooding() {
-	// TODO: DO FLOODING ONLY ON FULL NODES.
-	// TODO: MAKE FLOODING PACKAGE
-	cout << createAddress(ip, port) << " started flooding ... " << endl;
-	neighbour_iterator = connections.begin();
-	currState = NodeState::FLOODING;
-	// FLOOD
-	json emptyJson = latest_transaction;
-	std::string flood_address = neighbour_iterator->first;
-	// aca de alguna manera deberia evitar floodear nodos que no sean FULL
-	string flood_ip = get_address_ip(flood_address);
-	unsigned int flood_port = get_address_port(flood_address);
-	cout << createAddress(ip, port) << " doing FLOOD on " << flood_address << endl;
-	sendTX("send_tx", flood_ip, flood_port, { 15 }, { "32423" });
-}
-
-void FullNode::endFlooding() {
-	neighbour_iterator = connections.begin();
-	currState = NodeState::NETW_CREATED;
+void FullNode::goFlood(vector<string>& pubids, vector<int>& amounts) {
+	keys_list = extract_keys(connections);
+	pendingFloodRequests.push(TXfloodRequest(amounts, pubids, keys_list));
 }

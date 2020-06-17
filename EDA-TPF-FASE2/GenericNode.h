@@ -53,6 +53,8 @@ public:
 	json getBlockChain(void);
 
 protected:
+
+	std::vector<std::string> extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map);
 	vector<string> genesisNodes;
 	std::string createAddress(std::string ip, int port);
 	void listen_connection();
@@ -89,7 +91,7 @@ protected:
 	std::vector<std::string> permitedPaths;
 	std::map<std::string, std::string> answers;
 	MyClient client;
-
+	vector<string> keys_list;
 	json blockChain;
 
 	std::map<string, boost::asio::ip::tcp::socket*>::iterator neighbour_iterator;

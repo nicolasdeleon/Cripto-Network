@@ -28,7 +28,6 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	client(ip, port+1),
 	/*address(createAddress(ip, port)),*/
 	handler_socket(nullptr),
-	permitedPaths(AMOUNT_OF_PATHS),
 	neighbour_iterator(connections.begin())
 {
 	str = "blockChain32.json";
@@ -51,12 +50,14 @@ void GenericNode::addConnection(string destiny_address) {
 	connections.insert(std::pair<string, boost::asio::ip::tcp::socket*>(destiny_address, nullptr));
 	requests.insert(std::pair<string, vector<unsigned char>>(destiny_address, vector<unsigned char>(0)));
 	answers.insert(std::pair<string, string>(destiny_address, ""));
+	keys_list = extract_keys(connections);
 }
 
 bool GenericNode::deleteConnection(string destiny_address) {
 	if (connections[destiny_address] != nullptr)
 		delete(connections[destiny_address]);
 	bool res = connections.erase(destiny_address);
+	keys_list = extract_keys(connections);
 	return res;
 }
 
@@ -136,11 +137,11 @@ void GenericNode::connection_received_cb(const boost::system::error_code& error)
 {
 	//std::cout << "connection_received_cb()" << std::endl;
 	// me fijo de donde vino la conexion
-	string ip = handler_socket->remote_endpoint().address().to_string();
-	unsigned int port = handler_socket->remote_endpoint().port();
+	string origin_ip = handler_socket->remote_endpoint().address().to_string();
+	unsigned int origin_port = handler_socket->remote_endpoint().port();
 	//std::cout << ip << " ";
 	//std::cout << port << std::endl;
-	string inc_address = createAddress(ip, port-1);
+	string inc_address = createAddress(origin_ip, origin_port-1);
 	//std::cout << "incoming address "<< inc_address << endl;
 
 	// Checkeo que la conexion sea de un puerto de mi red
@@ -244,7 +245,7 @@ bool GenericNode::parse_request(string incoming_address) {
 				POST_request += mystring[j];
 				j++;
 			}
-			cout << POST_request << endl;
+			//cout << POST_request << endl;
 			incoming_json = json::parse(POST_request);
 			ret = true;
 		}
@@ -259,9 +260,9 @@ bool GenericNode::parse_request(string incoming_address) {
 
 	// CHECK:
 		// Node can handle request ?
-	if (std::find(permitedPaths.begin(), permitedPaths.end(), path_requested) != permitedPaths.end())
+	if (std::find(permitedPaths.begin(), permitedPaths.end(), path_requested) != permitedPaths.end()) ///0ACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA NO ENTRAAA
 	{
-		cout << endl <<endl << "hola me llego el mensaje desde \n" << incoming_address <<endl << endl;
+		//cout << endl <<endl << "hola me llego el mensaje desde \n" << incoming_address <<endl << endl;
 		dispatch_response(path_requested, incoming_address, incoming_json, block_id, count);
 	}
 	else {
@@ -390,4 +391,12 @@ json GenericNode::getBlockChain(void)
 {
 	return blockChain;
 
+}
+
+std::vector<std::string> GenericNode::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {
+	std::vector<std::string> retval;
+	for (auto const& element : input_map) {
+		retval.push_back(element.first);
+	}
+	return retval;
 }
