@@ -36,30 +36,7 @@ FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned
 	int i = (rand() % 990) + 10;
 	countdown = 10 * i;
 	al_start_timer(timer);
-	loTiene = false;
 	std::cout << port << "- countdown = " << countdown << "ms" << endl;
-}
-
-// Funcion para enviar pedido desde el nodo Full
-void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant) {
-
-	switch (id) {
-	case(MessageIds::BLOCK):
-		sendBlock("send_block", ip, port, to_string(block_id));
-		break;
-	case(MessageIds::TRANSACTION):
-		sendTX("send_tx", ip, port, { 15 }, { "32423" });
-		break;
-	case(MessageIds::MERKLE_BLOCK):
-		sendMklBlock("send_merkle_block", ip, port, to_string(block_id), 2);
-		break;
-	case(MessageIds::GET_BLOCKS):
-		getBlocks("get_blocks", ip, port, std::to_string(block_id), cant);
-		break;
-	default:
-		std::cout << "Error format in send package: Wrong id type" << std::endl;
-		break;
-	}
 }
 
 // Funcion que responde a un pedido desde el nodo Full
@@ -101,7 +78,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		
 		
 
-		response["result"] = "null";
+		response["result"] = "SOY" + ip + ":" + to_string(port);
 	}
 	else if (path == "/eda_coin/send_merkle_block") {
 		response["result"] = "null";
@@ -156,7 +133,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		}
 	}
 	else if (path == "/eda_coin/PING") {
-		std::cout << incoming_address << " pinged " << port << endl;
+		//std::cout << incoming_address << " pinged " << port << endl;
 		switch (currState) {
 		case NodeState::IDLE:
 			response["status"] = "NETWORK_NOTREADY";
@@ -189,7 +166,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		}
 	}
 	else {
-		std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
+		//std::cout << "NUNCA DEBERIA LLEGAR ACA" << std::endl;
 	}
 
 	//std::cout << "Respuesta del servidor " << createAddress(ip, port) << " al pedido:" << endl << response.dump() << std::endl;
@@ -205,7 +182,7 @@ bool FullNode::parseIncoming(json incoming_json)
 
 	if (!incoming_json.empty()) { //chequea que no esté vacío así no crashea todo con el parser
 
-		cout << incoming_json.dump(2) << endl;
+		//cout << incoming_json.dump(2) << endl;
 			for (int j = 0; j < incoming_json["vout"].size(); j++)
 			{
 				ams.push_back(incoming_json["vout"][j]["amount"]); //esto podria fallar por castear string a int implicitamente revisar
@@ -221,7 +198,7 @@ bool FullNode::parseIncoming(json incoming_json)
 	}
 	else
 	{
-		cout << "algo fallo en el parser (llego vacio)\n";
+		//cout << "algo fallo en el parser (llego vacio)\n";
 		return false;
 	}
 }
@@ -243,11 +220,11 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 			to_send_["txPos"] = tx_pos;
 			to_send_["merklePath"];
 			for (auto id : makeMerklePath(blockChain, block["tx"][tx_pos]["txid"])) {
-				to_send["merklePath"].push_back({ "id", id });
+				to_send_["merklePath"].push_back({ "id", id });
 			}
 		}
 		else {
-			cout << "No existe el blockid seleccionado";
+			//cout << "No existe el blockid seleccionado";
 		}
 	}
 
@@ -304,8 +281,7 @@ void FullNode::sendBlock(string path_, string outIp, int outPort, string blockId
 		}
 		else {
 			//pifiaste mache
-			to_send.clear();
-			cout << "pifiaste, no existe el blockid seleccionado";
+			//cout << "pifiaste, no existe el blockid seleccionado";
 		}
 	}
 	client.methodPost(path_, outIp, outPort, temp);
@@ -445,7 +421,7 @@ void FullNode::algoritmoParticular(void)
 		layoutJson["nodes"].push_back(createAddress(node.ip, node.puerto));
 	}
 
-	cout << layoutJson << endl;
+	//cout << layoutJson << endl;
 	
 	if (pingedNodes.size() > 1) {
 
@@ -547,6 +523,7 @@ void FullNode::doPolls() {
 	static bool b00l = true;
 	switch (currState) {
 	case NodeState::NETW_CREATED:
+
 		if (pendingFloodRequests.size()) {
 			currState = NodeState::FLOOD;
 		}
@@ -555,7 +532,8 @@ void FullNode::doPolls() {
 			flood_transaction();
 		break;
 	case NodeState::WAITING_FLOOD_RESPONSE:
-		if (!client.getAnswer().empty()) {
+		if (client.waiting4response()) {
+			string ans = client.getAnswer().dump(2);
 			currState = NodeState::FLOOD;
 		}
 		break;
@@ -568,7 +546,7 @@ void FullNode::doPolls() {
 
 			//cout << countdown << endl;
 			if (!countdown) {
-				cout << port << " done!" << endl;
+				//cout << port << " done!" << endl;
 				if (timer) {
 					al_destroy_timer(timer);
 				}
@@ -636,10 +614,10 @@ void FullNode::doPolls() {
 			string dummy = client.getAnswer()["status"];
 			std::string ping_response_address = neighbour_iterator->first;
 			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
+				//cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
 			}
 			else {
-				cout << createAddress(ip, port) << " received OTHER response from " << ping_response_address << endl;
+				//cout << createAddress(ip, port) << " received OTHER response from " << ping_response_address << endl;
 				remove_address.push_back(ping_response_address);
 			}
 			neighbour_iterator++;
@@ -658,7 +636,7 @@ void FullNode::doPolls() {
 				std::string ping_address = neighbour_iterator->first;
 				string ping_ip = get_address_ip(ping_address);
 				unsigned int ping_port = get_address_port(ping_address);
-				cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+				//cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
 				client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
 			}
 		}
@@ -759,7 +737,7 @@ void FullNode::startAppend() {
 void FullNode::endAppend() {
 	neighbour_iterator = connections.begin();
 	if (connections.size() == 0) {
-		cout << createAddress(ip, port) << "has no connections!" << endl;
+		//cout << createAddress(ip, port) << "has no connections!" << endl;
 		return;
 	}
 	unsigned int node_to_connect = rand() % connections.size() + 0;
@@ -769,7 +747,7 @@ void FullNode::endAppend() {
 
 	string node_to_connect_addres = neighbour_iterator->first;
 
-	cout << createAddress(ip, port) << " is asking " << node_to_connect_addres << " for blocks..." << endl;
+	//cout << createAddress(ip, port) << " is asking " << node_to_connect_addres << " for blocks..." << endl;
 	// TODO: UN HARDCODE THIS
 	string blocks_ip = get_address_ip(node_to_connect_addres);
 	unsigned int blocks_port = get_address_port(node_to_connect_addres);

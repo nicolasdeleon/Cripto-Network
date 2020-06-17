@@ -37,7 +37,7 @@ void MyClient::methodGet(string _path, string out_ip, int out_port, string block
 {
 	host = out_ip + ":" + to_string(out_port);
 	url = "http://" + host + "/eda_coin/" + _path + "?block_id=" + block_id + "&count=" +  to_string(count); //con la url le termino pasando que quiero que me devuelva
-	cout << url << endl;
+	//cout << url << endl;
 	configurateGETClient(out_port);
 	recibiendoInfo = 1;
 }
@@ -145,7 +145,7 @@ bool MyClient::performRequest(void)
 	else if (answer != "") {
 			curl_easy_cleanup(handler);
 			curl_multi_cleanup(multiHandler);
-			cout << answer << endl;
+			//cout << answer << endl;
 			janswer = json::parse(answer);
 			answer = "";
 	}

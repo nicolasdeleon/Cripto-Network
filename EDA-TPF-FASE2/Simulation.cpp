@@ -241,3 +241,25 @@ void Simulation::connectSPV()
 
 		appendNode(MyIp, myPort, NodeType::SPV, neighborhood);
 }
+
+
+void FullNode::send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant) {
+
+	switch (id) {
+	case(MessageIds::BLOCK):
+		sendBlock("send_block", ip, port, to_string(block_id));
+		break;
+	case(MessageIds::TRANSACTION):
+		sendTX("send_tx", ip, port, { 15 }, { "32423" });
+		break;
+	case(MessageIds::MERKLE_BLOCK):
+		sendMklBlock("send_merkle_block", ip, port, to_string(block_id), 2);
+		break;
+	case(MessageIds::GET_BLOCKS):
+		getBlocks("get_blocks", ip, port, std::to_string(block_id), cant);
+		break;
+	default:
+		std::cout << "Error format in send package: Wrong id type" << std::endl;
+		break;
+	}
+}

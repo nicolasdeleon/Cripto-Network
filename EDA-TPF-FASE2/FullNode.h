@@ -44,7 +44,7 @@ public:
 private:
 
 	// Node State
-
+	
 	NodeState currState;
 
 	//flood (tsx)
@@ -84,6 +84,8 @@ private:
 	
 	void dispatch_response(std::string path, std::string incoming_address, json& incoming_json, unsigned int block_id = 0, unsigned int count = 0);
 
+
+	void send_request(MessageIds id, std::string ip, unsigned int port, json& Json, unsigned int block_id, unsigned int cant);
 
 };
 

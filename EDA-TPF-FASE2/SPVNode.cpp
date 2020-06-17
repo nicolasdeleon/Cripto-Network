@@ -65,7 +65,7 @@ void SPVNode::doPolls() {
 		if (!client.getAnswer().empty()) {
 			std::string ping_response_address = neighbour_iterator->first;
 			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
+				//cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
 			}
 			else {
 				cout << createAddress(ip, port) << " received OTHER response from " << ping_response_address << endl;
@@ -86,7 +86,7 @@ void SPVNode::doPolls() {
 				std::string ping_address = neighbour_iterator->first;
 				string ping_ip = get_address_ip(ping_address);
 				unsigned int ping_port = get_address_port(ping_address);
-				cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+				//cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
 				client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
 			}
 		}
@@ -94,7 +94,7 @@ void SPVNode::doPolls() {
 	case NodeState::FILTERING:
 		if (!client.getAnswer().empty()) {
 			std::string ping_response_address = neighbour_iterator->first;
-			cout << createAddress(ip, port) << " received FILTER response from " << ping_response_address << endl;
+			//cout << createAddress(ip, port) << " received FILTER response from " << ping_response_address << endl;
 			neighbour_iterator++;
 			client.clearAnswer();
 			if (neighbour_iterator == connections.end()) {
@@ -108,7 +108,7 @@ void SPVNode::doPolls() {
 				std::string filter_address = neighbour_iterator->first;
 				string filter_ip = get_address_ip(filter_address);
 				unsigned int filter_port = get_address_port(filter_address);
-				cout << createAddress(ip, port) << " doing filter on " << filter_address << endl;
+				//cout << createAddress(ip, port) << " doing filter on " << filter_address << endl;
 				// TODO: UN-HARDCODE EMPTY JSON
 				client.methodPost("send_filter", filter_ip.c_str(), filter_port, emptyJson);
 			}
@@ -129,7 +129,7 @@ void SPVNode::startAppend() {
 	std::string ping_address = neighbour_iterator->first;
 	string ping_ip = get_address_ip(ping_address);
 	unsigned int ping_port = get_address_port(ping_address);
-	cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+	//cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
 	client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
 }
 
@@ -146,7 +146,7 @@ void SPVNode::endAppend(){
 
 	string node_to_connect_addres = neighbour_iterator->first;
 
-	cout << createAddress(ip, port) << " is asking " << node_to_connect_addres << " for headers..." << endl;
+	//cout << createAddress(ip, port) << " is asking " << node_to_connect_addres << " for headers..." << endl;
 	// TODO: UN HARDCODE get_block_header parameters
 	string headers_ip = get_address_ip(node_to_connect_addres);
 	unsigned int headers_port = get_address_port(node_to_connect_addres);
@@ -164,6 +164,6 @@ void SPVNode::startFiltering() {
 	std::string filter_address = neighbour_iterator->first;
 	string filter_ip = get_address_ip(filter_address);
 	unsigned int filter_port = get_address_port(filter_address);
-	cout << createAddress(ip, port) << " doing filter on " << filter_address << endl;
+	//cout << createAddress(ip, port) << " doing filter on " << filter_address << endl;
 	client.methodPost("send_filter", filter_ip.c_str(), filter_port, emptyJson);
 }
