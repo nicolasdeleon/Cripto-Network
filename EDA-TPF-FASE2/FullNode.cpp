@@ -253,7 +253,6 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 			);
 		}
 
-
 		to_send["vin"] = {};
 
 	}
