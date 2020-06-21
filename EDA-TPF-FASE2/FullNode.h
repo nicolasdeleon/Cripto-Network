@@ -5,6 +5,7 @@
 #include <allegro5/allegro.h>
 #include <queue>
 #include "TXfloodRequest.h"
+#include "BLKfloodRequest.h"
 
 
 
@@ -20,7 +21,9 @@ class FullNode : public GenericNode
 		WAITING_LAYOUT_RESPONSE,
 		APPENDING,
 		FLOOD,
-		WAITING_FLOOD_RESPONSE
+		WAITING_FLOOD_RESPONSE,
+		FLOOD_BLOCK,
+		WAITING_BLKFLOOD_RESPONSE,
 	};
 
 public:
@@ -50,9 +53,11 @@ private:
 	//flood (tsx)
 
 	void flood_transaction();
+	void flood_block();
 	bool parseIncoming(json incoming_json);
 	vector<std::string> mensajesRecibidos;
 	queue<TXfloodRequest> pendingFloodRequests;
+	queue<BLKfloodRequest> pendingBlockFloodRequests;
 	void sendTX(std::string path, std::string outIp, int outPort, vector<int> amounts, vector<std::string> publicIds);
 
 	//setup

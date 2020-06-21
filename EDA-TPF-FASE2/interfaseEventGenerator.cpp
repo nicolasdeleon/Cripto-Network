@@ -638,7 +638,10 @@ void interfaseEventGenerator::printMakeTsx(void) {
 
 
 	if (ImGui::BeginPopupModal("Tsx", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-	{
+	{	
+		/*
+		static int i0 = 123;
+        ImGui::InputInt("input int", &i0);
 		ImGui::Text("Please select the target node's IP and port:\n\n");
 		ImGui::Separator();
 
@@ -650,22 +653,26 @@ void interfaseEventGenerator::printMakeTsx(void) {
 				ImGui::RadioButton(currentNodes[i]->getAddress().c_str(), &checkedCnx, i);
 			}	
 		}
+		*/
+
+		static char pubId[8];
+		ImGui::InputText("Public Id", pubId, size_t(8), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase);
+
 
 		ImGui::Text("Please select the size of the transaction: ");
 		static int amount;
 		ImGui::InputInt("EDA$", &amount);
 
-		if (ImGui::Button("OK", ImVec2(120, 0)) && checkedCnx != -1) {
+		if (ImGui::Button("OK", ImVec2(120, 0))) {
 			
-
 			vector<string> target_adresses;
-			target_adresses.push_back(currentNodes[checked]->getAddress());
+			target_adresses.push_back(pubId);
 			vector<int> amounts;
 			amounts.push_back(amount);
 
 			mySim->sendTransaction(currentNodes[checked]->getAddress(), target_adresses, amounts);
 			ImGui::CloseCurrentPopup();
-			checkedCnx = -1;
+			//checkedCnx = -1;
 		}
 
 
@@ -674,7 +681,7 @@ void interfaseEventGenerator::printMakeTsx(void) {
 
 		if (ImGui::Button("Cancel", ImVec2(120, 0))) { 
 			ImGui::CloseCurrentPopup(); 
-			checkedCnx = -1;
+			//checkedCnx = -1;
 		}
 		ImGui::EndPopup();
 	}

@@ -49,8 +49,44 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 
 	if (path == "/eda_coin/send_block") {
 
-		/*aplicar flooding aca también*/
 
+		bool alreadyGotIt = false;
+
+		for (int i = 0; i < mensajesRecibidos.size() && !alreadyGotIt; i++)
+		{
+			if (incoming_json.dump() == mensajesRecibidos[i])
+				alreadyGotIt = true;
+		}
+		if (!alreadyGotIt)
+		{
+			std::cout << "ok soy " << ip << ":" << port << " guardare tu mensaje que viene de:" << incoming_address << endl;
+			mensajesRecibidos.push_back(incoming_json.dump());
+
+			if (!incoming_json.empty()) { //chequea que no esté vacío así no crashea todo con el parser
+
+				//cout << incoming_json.dump(2) << endl;
+
+				vector<string> neighbors = extract_keys(connections);
+
+				BLKfloodRequest newRequest(incoming_json, neighbors);
+				pendingBlockFloodRequests.push(newRequest);
+
+
+			}
+			else
+			{
+				//cout << "algo fallo en el parser (llego vacio)\n";
+			}
+
+		}
+		else
+		{
+			std::cout << "ok soy " << ip << ":" << port << " ya lo tenia (me lo mando: " << incoming_address << ")" << endl;
+		}
+
+		
+
+		//response["result"] = "SOY" + ip + ":" + to_string(port);
 		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_tx") {
@@ -69,6 +105,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 			std::cout << "ok soy " << ip << ":" << port << " guardare tu mensaje que viene de:" << incoming_address << endl;
 			mensajesRecibidos.push_back(incoming_json.dump());
 			parseIncoming(incoming_json);
+
 				
 		}
 		else
@@ -78,7 +115,8 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		
 		
 
-		response["result"] = "SOY" + ip + ":" + to_string(port);
+		//response["result"] = "SOY" + ip + ":" + to_string(port);
+		response["result"] = "null";
 	}
 	else if (path == "/eda_coin/send_merkle_block") {
 		response["result"] = "null";
@@ -526,15 +564,28 @@ void FullNode::doPolls() {
 		if (pendingFloodRequests.size()) {
 			currState = NodeState::FLOOD;
 		}
+		else if (pendingBlockFloodRequests.size()) {
+			currState = NodeState::FLOOD_BLOCK;
+		}
 		break;
 	case NodeState::FLOOD:
 			flood_transaction();
 		break;
 	case NodeState::WAITING_FLOOD_RESPONSE:
 		if (!client.getAnswer().empty()) {
-			string s = client.getAnswer().dump(1);
+			//string s = client.getAnswer().dump(1);
 			client.clearAnswer();
 			currState = NodeState::FLOOD;
+		}
+		break;
+	case NodeState::FLOOD_BLOCK:
+		flood_block();
+		break;
+	case NodeState::WAITING_BLKFLOOD_RESPONSE:
+		if (!client.getAnswer().empty()) {
+			//string s = client.getAnswer().dump(1);
+			client.clearAnswer();
+			currState = NodeState::FLOOD_BLOCK;
 		}
 		break;
 	case NodeState::IDLE:
@@ -660,6 +711,33 @@ void FullNode::flood_transaction()
 		std::cout << "ok soy " << ip << ":" << port << " envio a: " << current_ip << ":" << current_port << endl;
 		sendTX("send_tx", current_ip, current_port, pendingFloodRequests.front().get_amounts(), pendingFloodRequests.front().get_ids());
 		currState = NodeState::WAITING_FLOOD_RESPONSE;
+
+	}
+
+	else {
+		pendingFloodRequests.pop();
+		currState = NodeState::NETW_CREATED;
+	}
+}
+
+void FullNode::flood_block()
+{
+	if (!pendingBlockFloodRequests.front().empty()) {
+
+		string elemento = pendingBlockFloodRequests.front().get_next_neighbor();
+		//parseo
+		stringstream check1(elemento);
+		string intermediate;
+		getline(check1, intermediate, ':');
+		string current_ip = intermediate;
+		getline(check1, intermediate, ':');
+		int current_port = stoi(intermediate);
+
+		json blockJson = pendingBlockFloodRequests.front().get_block();
+
+		std::cout << "ok soy " << ip << ":" << port << " envio a: " << current_ip << ":" << current_port << endl;
+		client.methodPost("/eda_coin/eda_coin/send_block", current_ip, current_port, blockJson);
+		currState = NodeState::WAITING_BLKFLOOD_RESPONSE;
 
 	}
 

@@ -164,7 +164,6 @@
     <ClCompile Include="MyClient.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="SPVNode.cpp" />
-    <ClCompile Include="TXfloodRequest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blockchainHandler.h" />
@@ -172,6 +171,7 @@
     <ClInclude Include="FullNode.h" />
     <ClInclude Include="genericFSM.h" />
     <ClInclude Include="GenericNode.h" />
+    <ClInclude Include="BLKfloodRequest.h" />
     <ClInclude Include="Imgui_files\imconfig.h" />
     <ClInclude Include="Imgui_files\imgui.h" />
     <ClInclude Include="Imgui_files\imgui_impl_allegro5.h" />
