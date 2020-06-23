@@ -246,13 +246,14 @@ bool FullNode::parseIncoming(string inc_adress, json incoming_json)
 bool validateTX(json& txJson) {
 	if (txJson.empty()) {
 		return false;
-	}/*
+	}
 	else {
-		int inTotal=0;
+		/*int inTotal=0;
 		int outTotal=0;
-		for(auto inTx : txJson[""])
+		for(auto inTx : txJson[""])*/
+		return true;
 
-	}*/
+	}
 }
 
 
