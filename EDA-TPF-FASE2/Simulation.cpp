@@ -32,6 +32,9 @@ GenericNode* Simulation::addNode(string ip, unsigned int port, NodeType NodeType
 	else if (NodeType == NodeType::FULL) {
 		newNode = new FullNode(*context, ip, port);
 	}
+	else if (NodeType == NodeType::MINER) {
+		newNode = new MinerNode(*context, ip, port);
+	}
 	if (newNode == nullptr) {
 		cout << "Problema inicializando el nodo" << endl;
 		res = false;
@@ -180,7 +183,7 @@ unsigned int get_address_port(string& addres) {
 bool Simulation::appendNode(string& my_ip, unsigned int& my_port, NodeType my_type, vector<string>& neighborhood) {
 	bool res = true;
 
-	if ((my_type == NodeType::FULL && neighborhood.size() < 1) ||
+	if (((my_type == NodeType::FULL || my_type == NodeType::MINER) && neighborhood.size() < 1) ||
 		(my_type == NodeType::SPV && neighborhood.size() < 2)) {
 		res = false;
 		cout << "Cantidad de conexiones incorrectas para el tipo de nodo" << endl;

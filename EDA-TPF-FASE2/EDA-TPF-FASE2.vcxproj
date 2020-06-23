@@ -161,6 +161,7 @@
     <ClCompile Include="Imgui_files\imgui_widgets.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="interfaseEventGenerator.cpp" />
+    <ClCompile Include="MinerNode.cpp" />
     <ClCompile Include="MyClient.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <ClCompile Include="SPVNode.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="Imgui_files\imstb_truetype.h" />
     <ClInclude Include="interfaseEventGenerator.h" />
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="MinerNode.h" />
     <ClInclude Include="MyClient.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="SPVNode.h" />

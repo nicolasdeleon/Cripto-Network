@@ -149,6 +149,165 @@ vector<vector<string>> blockchainHandler::makeMerkleTree(int blockNumber) {
 	return levels;
 }
 
+vector<vector<string>> blockchainHandler::makeMerkleTree(json& BlockJSON) {
+
+	cout << BlockJSON.dump(2) << endl;
+	vector<vector<string>> levels;
+
+	// Hojas
+	vector<string> currentLevel;
+
+	vector<string> prehashIDs;
+	for (auto transaction : BlockJSON["tx"]) {
+
+		string id;
+		for (auto tx : transaction["vin"]) {
+			id += string(tx["txid"].get<string>());
+		}
+		prehashIDs.push_back(id);
+	}
+	if (prehashIDs.size() % 2) {
+		prehashIDs.push_back(prehashIDs.back());
+	}
+
+
+	// hashes
+
+	currentLevel.clear();
+	for (string oldId : prehashIDs) {
+
+		unsigned char* oldID_char = new unsigned char[oldId.length() + 1]; //Copiado de stack overflow 
+		strcpy((char*)oldID_char, oldId.c_str());
+
+		unsigned int newID = generateID(oldID_char);
+		currentLevel.push_back(hexCodexASCII(newID));
+	}
+	// Borrar lo de abajo
+	if (currentLevel.size() % 2) {
+		currentLevel.push_back(levels[1].back());
+	}
+	levels.push_back(currentLevel);
+
+
+	while (levels.back().size() > 1) {
+
+		currentLevel.clear();
+
+		if (!(levels.back().size() % 2)) {
+			// Uno los hashes anteriores en el actual
+			for (int i = 1; i < levels.back().size(); i += 2) {
+				currentLevel.push_back(levels.back()[i - 1] + levels.back()[i]);
+			}
+		}
+		else {
+			int i;
+			for (i = 1; i < (levels.back().size() - 1); i += 2) {
+				currentLevel.push_back(levels.back()[i - 1] + levels.back()[i]);
+			}
+			currentLevel.push_back(levels.back()[i - 1] + levels.back()[i - 1]);
+		}
+
+		//re-hasheo el nivel actual
+
+		for (int i = 0; i < currentLevel.size(); i++) {
+
+			unsigned char* oldID = new unsigned char[currentLevel[i].length() + 1]; //Copiado de stack overflow 
+			strcpy((char*)oldID, currentLevel[i].c_str());
+
+			unsigned int newID = generateID(oldID);
+			currentLevel[i] = hexCodexASCII(newID);
+		}
+
+		//Agrego el nivel actual al vector
+		levels.push_back(currentLevel);
+	}
+	//merkleroot = BlockChainJSON[blockNumber]["merkleroot"].get<string>();
+	//cout << "Nuestra merkle root: " << levels.back().back() << endl; 
+	//cout << "La merkle root del bloque: " << BlockChainJSON[blockNumber]["merkleroot"] << endl; 
+
+
+	return levels;
+}
+/*
+vector<vector<string>> blockchainHandler::makeMerkleTree(json& block) {
+
+	vector<vector<string>> levels;
+
+	// Hojas
+	vector<string> currentLevel;
+
+	vector<string> prehashIDs;
+	for (auto transaction : BlockChainJSON[blockNumber]["tx"]) {
+
+		string id;
+		for (auto tx : transaction["vin"]) {
+			id += string(tx["txid"].get<string>());
+		}
+		prehashIDs.push_back(id);
+	}
+	if (prehashIDs.size() % 2) {
+		prehashIDs.push_back(prehashIDs.back());
+	}
+
+
+	// hashes
+
+	currentLevel.clear();
+	for (string oldId : prehashIDs) {
+
+		unsigned char* oldID_char = new unsigned char[oldId.length() + 1]; //Copiado de stack overflow 
+		strcpy((char*)oldID_char, oldId.c_str());
+
+		unsigned int newID = generateID(oldID_char);
+		currentLevel.push_back(hexCodexASCII(newID));
+	}
+	// Borrar lo de abajo
+	if (currentLevel.size() % 2) {
+		currentLevel.push_back(levels[1].back());
+	}
+	levels.push_back(currentLevel);
+
+
+	while (levels.back().size() > 1) {
+
+		currentLevel.clear();
+
+		if (!(levels.back().size() % 2)) {
+			// Uno los hashes anteriores en el actual
+			for (int i = 1; i < levels.back().size(); i += 2) {
+				currentLevel.push_back(levels.back()[i - 1] + levels.back()[i]);
+			}
+		}
+		else {
+			int i;
+			for (i = 1; i < (levels.back().size() - 1); i += 2) {
+				currentLevel.push_back(levels.back()[i - 1] + levels.back()[i]);
+			}
+			currentLevel.push_back(levels.back()[i - 1] + levels.back()[i - 1]);
+		}
+
+		//re-hasheo el nivel actual
+
+		for (int i = 0; i < currentLevel.size(); i++) {
+
+			unsigned char* oldID = new unsigned char[currentLevel[i].length() + 1]; //Copiado de stack overflow 
+			strcpy((char*)oldID, currentLevel[i].c_str());
+
+			unsigned int newID = generateID(oldID);
+			currentLevel[i] = hexCodexASCII(newID);
+		}
+
+		//Agrego el nivel actual al vector
+		levels.push_back(currentLevel);
+	}
+	merkleroot = BlockChainJSON[blockNumber]["merkleroot"].get<string>();
+	//cout << "Nuestra merkle root: " << levels.back().back() << endl; 
+	//cout << "La merkle root del bloque: " << BlockChainJSON[blockNumber]["merkleroot"] << endl; 
+
+
+	return levels;
+}*/ 
+
 unsigned int blockchainHandler::generateID(unsigned char* str)
 {
 	unsigned int id = 0;

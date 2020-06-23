@@ -29,7 +29,7 @@ public:
         return !(keys_left.size());
     }
 
-    string get_block() {
+    json get_block() {
         return blockJson;
     }
 

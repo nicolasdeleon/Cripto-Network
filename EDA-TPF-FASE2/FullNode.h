@@ -6,11 +6,33 @@
 #include <queue>
 #include "TXfloodRequest.h"
 #include "BLKfloodRequest.h"
-
-
+#include "blockchainHandler.h"
 
 class FullNode : public GenericNode
 {
+
+public:
+
+	FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port);
+	~FullNode();
+
+	virtual void doPolls();
+	
+	bool getState() {
+		if (currState == NodeState::NETW_CREATED) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	};
+	json getBlockChain_FULL(void);
+	void goFlood(vector<string>&pubids, vector<int>&amount);
+
+protected:
+
+	// Node State
+
 	enum class NodeState {
 		IDLE,
 		COL_NETW_MEMBS,
@@ -25,28 +47,6 @@ class FullNode : public GenericNode
 		FLOOD_BLOCK,
 		WAITING_BLKFLOOD_RESPONSE,
 	};
-
-public:
-
-	FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port);
-	~FullNode();
-
-	void doPolls();
-	
-	bool getState() {
-		if (currState == NodeState::NETW_CREATED) {
-			return true;
-		}
-		else {
-			return false;
-		}
-	};
-	json getBlockChain_FULL(void);
-	void goFlood(vector<string>&pubids, vector<int>&amount);
-
-private:
-
-	// Node State
 	
 	NodeState currState;
 
@@ -54,11 +54,13 @@ private:
 
 	void flood_transaction();
 	void flood_block();
-	bool parseIncoming(json incoming_json);
+	bool parseIncoming(string inc_adress, json incoming_json);
 	vector<std::string> mensajesRecibidos;
 	queue<TXfloodRequest> pendingFloodRequests;
 	queue<BLKfloodRequest> pendingBlockFloodRequests;
 	void sendTX(std::string path, std::string outIp, int outPort, vector<int> amounts, vector<std::string> publicIds);
+	virtual void processTsx(string& inc_adrs, json& inc_json);
+	bool validateTX(json&);
 
 	//setup
 

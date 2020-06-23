@@ -6,14 +6,14 @@
 #include <iostream>
 #include <vector>
 #include "MyClient.h"
-
+#include "blockchainHandler.h"
 #define REMOVE "REMOVE"
 #define REQUEST_BUFFER_LENGTH 700
 #define AMOUNT_OF_PATHS 10
 #define TIME_OUT 5000
 
 
-enum class NodeType { FULL, SPV };
+enum class NodeType { FULL, SPV, MINER };
 
 typedef struct nodeInfo {
 	string ip;
@@ -29,7 +29,7 @@ enum MessageIds : message_id { MERKLE_BLOCK, BLOCK, TRANSACTION, GET_BLOCK_HEADE
 class GenericNode {
 public:
 	GenericNode(boost::asio::io_context& io_context, std::string ip = "127.0.0.1", unsigned int port = 80);
-	~GenericNode();
+	virtual ~GenericNode();
 	void start();
 	std::map<std::string, boost::asio::ip::tcp::socket*> getConnections();
 	void addConnection(std::string destiny_address);
@@ -93,7 +93,7 @@ protected:
 	MyClient client;
 	vector<string> keys_list;
 	json blockChain;
-
+	blockchainHandler blockchainHandler;
 	std::map<string, boost::asio::ip::tcp::socket*>::iterator neighbour_iterator;
 	vector<string> remove_address;
 

@@ -25,19 +25,14 @@ GenericNode::GenericNode(boost::asio::io_context& io_context, string ip, unsigne
 	acceptor_(io_context, tcp::endpoint(tcp::v4(), port)),
 	port(port),
 	ip(ip),
-	client(ip, port+1),
-	/*address(createAddress(ip, port)),*/
+	client(ip, port + 1),
 	handler_socket(nullptr),
 	neighbour_iterator(connections.begin())
 {
-	str = "blockChain32.json";
-	ifstream blocks_file(str, ifstream::binary);
-	blocks_file >> blockChain;
 }
 
 GenericNode::~GenericNode()
 {
-
 	// deberia destruir el mapa de sockets, de todas formas es probable que ya este destruido porque destruyo cada socket cada vez q cierro la conexion
 }
 
@@ -111,7 +106,6 @@ void GenericNode::listen_connection()
 {
 	//std::cout << "listening conection..." << std::endl;
 	this->handler_socket = new boost::asio::ip::tcp::socket(context_);
-
 	acceptor_.async_accept(
 		*(this->handler_socket),
 		[this](const boost::system::error_code& error) {
@@ -389,8 +383,7 @@ string GenericNode::getstr(void)
 
 json GenericNode::getBlockChain(void)
 {
-	return blockChain;
-
+	return blockchainHandler.BlockChainJSON;
 }
 
 std::vector<std::string> GenericNode::extract_keys(std::map<std::string, boost::asio::ip::tcp::socket*> const& input_map) {

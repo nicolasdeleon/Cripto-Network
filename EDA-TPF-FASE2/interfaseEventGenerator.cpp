@@ -152,86 +152,94 @@ void interfaseEventGenerator::printInfoWindow(void) {
 
 	ImGui::Begin("Informacion", 0, 0);
 	static int radio_button=-1;
-	for (int i = 0; i < blockchainlocal.size(); i++){
-		string blockId = blockchainlocal[i]["blockid"].get<string>();
-		ImGui::RadioButton(blockId.c_str(), &radio_button, i);
+
+	if (!blockchainlocal.empty()) {
+		for (int i = 0; i < blockchainlocal.size(); i++) {
+			string blockId = blockchainlocal[i]["blockid"].get<string>();
+			ImGui::RadioButton(blockId.c_str(), &radio_button, i);
+		}
+
+
+		if (ImGui::Button("Information"))
+		{
+			if (radio_button != -1) {
+				showBlockInfo(radio_button);
+				caso = POPS::Info;
+			}
+			else {
+				//sin esta parte daria un error al querer leer filename con nada guardado.
+				printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+				errorString = "Select a radioButton to continue\n";
+				caso = POPS::Failed;
+			}
+
+		}
+
+		if (ImGui::Button("Calcular el Merkle root"))
+		{
+
+			if (radio_button != -1) {
+				caso = POPS::Merkle;
+			}
+			else {
+				//sin esta parte daria un error al querer leer filename con nada guardado.
+				printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+				errorString = "Select a radioButton to continue\n";
+				caso = POPS::Failed;
+			}
+		}
+
+		if (ImGui::Button("Validar el Merkle root"))
+		{
+
+			if (radio_button != -1) {
+				caso = POPS::ValidateMerkle;
+			}
+			else {
+				//sin esta parte daria un error al querer leer filename con nada guardado.
+				printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+				errorString = "Tenes que seleccionar un radio button antes de clickear el boton\n";
+				caso = POPS::Failed;
+			}
+
+		}
+
+		if (ImGui::Button("Merkle Tree"))
+		{
+
+			if (radio_button != -1) {
+				vector<vector<string>> tree = blockchainHandler.makeMerkleTree(radio_button);
+				printTree(tree);
+			}
+			else {
+				//sin esta parte daria un error al querer leer filename con nada guardado.
+				printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
+				errorString = "Tenes que seleccionar un radio button antes de clickear el boton\n";
+				caso = POPS::Failed;
+			}
+		}
+
+		if (displayTree.show) {
+			//ImGui::SetNextWindowPos(ImVec2(400, 10));  //lo quite por conveniencia podemos ponerlo despues pero en una pos mas comoda
+			ImGui::SetNextWindowSize(ImVec2(500, 450));
+			ImGui::Begin("Merkel Tree", 0, 0);
+
+			ImGui::BeginChild("Merkle Tree", ImVec2(470, 370), true, ImGuiWindowFlags_None);
+			const char* tree = displayTree.tree.c_str();
+			ImGui::TextUnformatted(tree, tree + displayTree.tree.size());
+			ImGui::EndChild();
+
+
+			if (ImGui::Button("Close")) {
+				displayTree.show = false;
+			}
+			ImGui::End();
+		}
 	}
-
-	if (ImGui::Button("Information"))
-	{
-		if (radio_button != -1) {
-			showBlockInfo(radio_button);
-			caso = POPS::Info;
-		}
-		else {
-			//sin esta parte daria un error al querer leer filename con nada guardado.
-			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
-			errorString = "Select a radioButton to continue\n";
-			caso = POPS::Failed;
-		}
-		
+	else {
+		ImGui::Text("El blockchain esta vacio...");
 	}
-
-	if (ImGui::Button("Calcular el Merkle root"))
-	{
-
-		if (radio_button != -1) {
-			caso = POPS::Merkle;
-		}
-		else {
-			//sin esta parte daria un error al querer leer filename con nada guardado.
-			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
-			errorString = "Select a radioButton to continue\n";
-			caso = POPS::Failed;
-		}
-	}
-
-	if (ImGui::Button("Validar el Merkle root"))
-	{
-
-		if (radio_button != -1) {
-			caso = POPS::ValidateMerkle;
-		}
-		else {
-			//sin esta parte daria un error al querer leer filename con nada guardado.
-			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
-			errorString = "Tenes que seleccionar un radio button antes de clickear el boton\n";
-			caso = POPS::Failed;
-		}
-
-	}
-
-	if (ImGui::Button("Merkle Tree"))
-	{
-
-		if (radio_button != -1) {
-			vector<vector<string>> tree = blockchainHandler.makeMerkleTree(radio_button);
-			printTree(tree);
-		}
-		else {
-			//sin esta parte daria un error al querer leer filename con nada guardado.
-			printf("Tenes que seleccionar un radio button antes de clickear el boton\n");
-			errorString = "Tenes que seleccionar un radio button antes de clickear el boton\n";
-			caso = POPS::Failed;
-		}
-	}
-
-	if (displayTree.show) {
-		//ImGui::SetNextWindowPos(ImVec2(400, 10));  //lo quite por conveniencia podemos ponerlo despues pero en una pos mas comoda
-		ImGui::SetNextWindowSize(ImVec2(500, 450));
-		ImGui::Begin("Merkel Tree", 0, 0);
-
-		ImGui::BeginChild("Merkle Tree", ImVec2(470, 370), true, ImGuiWindowFlags_None);
-		const char* tree = displayTree.tree.c_str();
-		ImGui::TextUnformatted(tree, tree + displayTree.tree.size());
-		ImGui::EndChild();
-
-
-		if (ImGui::Button("Close")){
-			displayTree.show = false;
-		}
-		ImGui::End();
-	}
+	
 
 
 	if (ImGui::Button("Volver"))
@@ -365,6 +373,7 @@ void interfaseEventGenerator::printMakingNode(void) {
 
 		ImGui::RadioButton("Full Node", &NType, 0);
 		ImGui::RadioButton("SPV Node", &NType, 1);
+		ImGui::RadioButton("MINER Node", &NType, 2);
 
 		if (ImGui::Button("Add connection"))
 			ImGui::OpenPopup("Add connection");
@@ -496,7 +505,7 @@ void interfaseEventGenerator::showBlockInfo(int index) {
 	displayInfo.previousBlockId = "Previous block id: " + mySim->Nodes[makingChecked]->getBlockChain()[index]["previousblockid"].get<string>();
 	displayInfo.NTransactions = "Number of transactions: " + to_string(mySim->Nodes[makingChecked]->getBlockChain()[index]["nTx"].get<int>());
 	displayInfo.BlockNumber = "Block number: " + to_string(index);
-	displayInfo.nonce = "Nonce: " + to_string(mySim->Nodes[makingChecked]->getBlockChain()[index]["nonce"].get<int>());
+	displayInfo.nonce = "Nonce: " + mySim->Nodes[makingChecked]->getBlockChain()[index]["nonce"].get<string>();
 	displayInfo.show = true;
 }
 

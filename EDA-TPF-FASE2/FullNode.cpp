@@ -4,20 +4,19 @@
 #include <iomanip>
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
 
 void createConection(string& origin_address, string& destiny_address, vector<GenericNode*>& Nodes);
 void visitar(int nodo_a_visitar, vector<NodeInfo>& pingedNodes);
 
 FullNode::FullNode(boost::asio::io_context& io_context, std::string ip, unsigned int port) : GenericNode(io_context, ip, port) {
 	// pedidos que permito a mi nodo
-	permitedPaths.push_back("/eda_coin/eda_coin/send_block");
+	permitedPaths.push_back("/eda_coin/send_block");
 	permitedPaths.push_back("/eda_coin/send_tx");
 	permitedPaths.push_back("/eda_coin/send_merkle_block");
 	permitedPaths.push_back("/eda_coin/send_filter");
-	permitedPaths.push_back("eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_blocks");
 	permitedPaths.push_back("/eda_coin/get_block_header");
-	permitedPaths.push_back("eda_coin/get_block_header");
 	permitedPaths.push_back("/eda_coin/PING");
 	permitedPaths.push_back("/eda_coin/NETWORK_LAYOUT");
 
@@ -59,15 +58,17 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		}
 		if (!alreadyGotIt)
 		{
-			std::cout << "ok soy " << ip << ":" << port << " guardare tu mensaje que viene de:" << incoming_address << endl;
+			std::cout << "ok soy " << ip << ":" << port << " guardare tu BLOQUE que viene de:" << incoming_address << endl;
 			mensajesRecibidos.push_back(incoming_json.dump());
 
 			if (!incoming_json.empty()) { //chequea que no esté vacío así no crashea todo con el parser
 
 				//cout << incoming_json.dump(2) << endl;
 
-				vector<string> neighbors = extract_keys(connections);
+				blockchainHandler.BlockChainJSON.push_back(incoming_json);
 
+				vector<string> neighbors = extract_keys(connections);
+				neighbors.erase(std::remove(neighbors.begin(), neighbors.end(), incoming_address), neighbors.end());
 				BLKfloodRequest newRequest(incoming_json, neighbors);
 				pendingBlockFloodRequests.push(newRequest);
 
@@ -81,7 +82,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 		}
 		else
 		{
-			std::cout << "ok soy " << ip << ":" << port << " ya lo tenia (me lo mando: " << incoming_address << ")" << endl;
+			std::cout << "ok soy " << ip << ":" << port << " ya tenia ese BLOQUE (me lo mando: " << incoming_address << ")" << endl;
 		}
 
 		
@@ -92,28 +93,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 	else if (path == "/eda_coin/send_tx") {
 		//std::cout << ip << ":" << port << incoming_json.dump() << endl;
 
-	
-		bool alreadyGotIt = false;
-
-		for (int i = 0; i < mensajesRecibidos.size() && !alreadyGotIt; i++)
-		{
-			if (incoming_json.dump() == mensajesRecibidos[i])
-				alreadyGotIt = true;
-		}
-		if (!alreadyGotIt)
-		{
-			std::cout << "ok soy " << ip << ":" << port << " guardare tu mensaje que viene de:" << incoming_address << endl;
-			mensajesRecibidos.push_back(incoming_json.dump());
-			parseIncoming(incoming_json);
-
-				
-		}
-		else
-		{
-			std::cout << "ok soy " << ip << ":" << port << " ya lo tenia (me lo mando: " << incoming_address << ")" << endl;
-		}
-		
-		
+		processTsx(incoming_address, incoming_json);
 
 		//response["result"] = "SOY" + ip + ":" + to_string(port);
 		response["result"] = "null";
@@ -127,7 +107,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 	else if (path == "/eda_coin/get_blocks" || path == "eda_coin/get_blocks") {
 		int blocks_left = 0;
 		bool allOk = false;
-		for (auto block : blockChain) {
+		for (auto block : blockchainHandler.BlockChainJSON) {
 			if (block["blockid"] == block_id) {
 				allOk = true;
 				blocks_left = count--;
@@ -148,7 +128,7 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 	else if (path == "/eda_coin/get_block_header" || path == "eda_coin/get_block_header") {
 		bool allOk = false;
 		if (blockChain.size()) {
-			for (auto block : blockChain) {
+			for (auto block : blockchainHandler.BlockChainJSON) {
 				if (block["blockid"] == block_id) {
 					allOk = true;
 					response["result"]["blockid"] = block["blockid"];
@@ -212,13 +192,34 @@ void FullNode::dispatch_response(string path, string incoming_address, json& inc
 
 }
 
+void FullNode::processTsx(string& inc_adrs, json& inc_json) {
+	bool alreadyGotIt = false;
 
-bool FullNode::parseIncoming(json incoming_json)
+	for (int i = 0; i < mensajesRecibidos.size() && !alreadyGotIt; i++)
+	{
+		if (incoming_json.dump() == mensajesRecibidos[i])
+			alreadyGotIt = true;
+	}
+	if (!alreadyGotIt)
+	{
+		std::cout << "ok soy " << ip << ":" << port << " guardare tu ´TRANSACCIÓN que viene de:" << inc_adrs << endl;
+		mensajesRecibidos.push_back(incoming_json.dump());
+		parseIncoming(inc_adrs, incoming_json);
+
+
+	}
+	else
+	{
+		std::cout << "ok soy " << ip << ":" << port << " ya tenia esa TRANSACCIÓN (me lo mando: " << inc_adrs << ")" << endl;
+	}
+}
+
+bool FullNode::parseIncoming(string inc_adress, json incoming_json)
 {
 	vector<int> ams;
 	vector<string> ids;
 
-	if (!incoming_json.empty()) { //chequea que no esté vacío así no crashea todo con el parser
+	if (validateTX(incoming_json)) { //chequea que no esté vacío así no crashea todo con el parser
 
 		//cout << incoming_json.dump(2) << endl;
 			for (int j = 0; j < incoming_json["vout"].size(); j++)
@@ -228,6 +229,7 @@ bool FullNode::parseIncoming(json incoming_json)
 			}
 
 			vector<string> neighbors = extract_keys(connections);
+			neighbors.erase(std::remove(neighbors.begin(), neighbors.end(), inc_adress), neighbors.end());
 
 			TXfloodRequest newRequest(ams, ids, neighbors);
 			pendingFloodRequests.push(newRequest);
@@ -241,6 +243,18 @@ bool FullNode::parseIncoming(json incoming_json)
 	}
 }
 
+bool validateTX(json& txJson) {
+	if (txJson.empty()) {
+		return false;
+	}/*
+	else {
+		int inTotal=0;
+		int outTotal=0;
+		for(auto inTx : txJson[""])
+
+	}*/
+}
+
 
 FullNode::~FullNode() {
 
@@ -251,13 +265,13 @@ void FullNode::sendMklBlock(string path, string outIp, int outPort, string block
 	json to_send_;
 	to_send_["blockid"] = blockId /*blockChain[blockId]*/;
 
-	for (auto block : blockChain) {
+	for (auto block : blockchainHandler.BlockChainJSON) {
 		// TODO: DECIRTE QUE ESTAS FLASHEANDO SI NO ENCUENTRA EL BLOCK ID
 		if (block["blockid"] == blockId) {
 			to_send_["tx"][tx_pos] = block["tx"];
 			to_send_["txPos"] = tx_pos;
 			to_send_["merklePath"];
-			for (auto id : makeMerklePath(blockChain, block["tx"][tx_pos]["txid"])) {
+			for (auto id : makeMerklePath(blockchainHandler.BlockChainJSON, block["tx"][tx_pos]["txid"])) {
 				to_send_["merklePath"].push_back({ "id", id });
 			}
 		}
@@ -280,7 +294,6 @@ void FullNode::sendTX(string path, string outIp, int outPort, vector<int> amount
 		to_send["nTxin"] = 1;
 		to_send["nTxout"] = nTxout;
 		to_send["txid"] = "7B857A14";
-		to_send["previousBlockId"] = "00000000";
 		to_send["vout"] = {};
 		for (int i = 0; i < nTxout; i++) {
 			to_send["vout"].push_back(
@@ -312,7 +325,7 @@ void FullNode::sendBlock(string path_, string outIp, int outPort, string blockId
 
 	json temp;
 
-	for (auto block : blockChain) {
+	for (auto block : blockchainHandler.BlockChainJSON) {
 		if (block["blockid"] == blockId) {
 			temp = block;
 		}
@@ -555,143 +568,149 @@ void visitar(int nodo_a_visitar, vector<NodeInfo>& pingedNodes)
 }
 
 void FullNode::doPolls() {
-	getNodeIoContext().poll();
-	curlPoll();
-	static bool b00l = true;
-	switch (currState) {
-	case NodeState::NETW_CREATED:
+	try {
+		getNodeIoContext().poll();
+		curlPoll();
+		static bool b00l = true;
+		switch (currState) {
+		case NodeState::NETW_CREATED:
 
-		if (pendingFloodRequests.size()) {
-			currState = NodeState::FLOOD;
-		}
-		else if (pendingBlockFloodRequests.size()) {
-			currState = NodeState::FLOOD_BLOCK;
-		}
-		break;
-	case NodeState::FLOOD:
-			flood_transaction();
-		break;
-	case NodeState::WAITING_FLOOD_RESPONSE:
-		if (!client.getAnswer().empty()) {
-			//string s = client.getAnswer().dump(1);
-			client.clearAnswer();
-			currState = NodeState::FLOOD;
-		}
-		break;
-	case NodeState::FLOOD_BLOCK:
-		flood_block();
-		break;
-	case NodeState::WAITING_BLKFLOOD_RESPONSE:
-		if (!client.getAnswer().empty()) {
-			//string s = client.getAnswer().dump(1);
-			client.clearAnswer();
-			currState = NodeState::FLOOD_BLOCK;
-		}
-		break;
-	case NodeState::IDLE:
-		ALLEGRO_EVENT ev;
-
-		if (al_get_next_event(AlEvQueue, &ev) && ev.type == ALLEGRO_EVENT_TIMER) {
-
-			countdown -= 10;
-
-			//cout << countdown << endl;
-			if (!countdown) {
-				//cout << port << " done!" << endl;
-				if (timer) {
-					al_destroy_timer(timer);
-				}
-				if (AlEvQueue) {
-					al_destroy_event_queue(AlEvQueue);
-				}
-				currState = NodeState::COL_NETW_MEMBS;
+			if (pendingFloodRequests.size()) {
+				currState = NodeState::FLOOD;
 			}
-		}
-		break;
-	case NodeState::COL_NETW_MEMBS:
-		if (pingedNodes.size() < genesisNodes.size()) {
-			pingNodes();
-			currState = NodeState::WAITING_PING_RESPONSE;
-		}
-		else {
-			algoritmoParticular();
-			currState = NodeState::SENDING_LAYOUTS;
-		}
-		break;
-	case NodeState::WAITING_PING_RESPONSE:
-		if (!client.getAnswer().empty()) {
+			else if (pendingBlockFloodRequests.size()) {
+				currState = NodeState::FLOOD_BLOCK;
+			}
+			break;
+		case NodeState::FLOOD:
+			flood_transaction();
+			break;
+		case NodeState::WAITING_FLOOD_RESPONSE:
+			if (!client.getAnswer().empty()) {
+				//string s = client.getAnswer().dump(1);
+				client.clearAnswer();
+				currState = NodeState::FLOOD;
+			}
+			break;
+		case NodeState::FLOOD_BLOCK:
+			flood_block();
+			break;
+		case NodeState::WAITING_BLKFLOOD_RESPONSE:
+			if (!client.getAnswer().empty()) {
+				//string s = client.getAnswer().dump(1);
+				client.clearAnswer();
+				currState = NodeState::FLOOD_BLOCK;
+			}
+			break;
+		case NodeState::IDLE:
+			ALLEGRO_EVENT ev;
 
-			string dummy = client.getAnswer()["status"];
+			if (al_get_next_event(AlEvQueue, &ev) && ev.type == ALLEGRO_EVENT_TIMER) {
 
-			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				//cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress << endl;
-				addConnection(pingingNodeAdress);
+				countdown -= 10;
+
+				//cout << countdown << endl;
+				if (!countdown) {
+					//cout << port << " done!" << endl;
+					if (timer) {
+						al_destroy_timer(timer);
+					}
+					if (AlEvQueue) {
+						al_destroy_event_queue(AlEvQueue);
+					}
+					currState = NodeState::COL_NETW_MEMBS;
+				}
+			}
+			break;
+		case NodeState::COL_NETW_MEMBS:
+			if (pingedNodes.size() < genesisNodes.size()) {
+				pingNodes();
+				currState = NodeState::WAITING_PING_RESPONSE;
+			}
+			else {
 				algoritmoParticular();
 				currState = NodeState::SENDING_LAYOUTS;
-				client.clearAnswer();
 			}
-			else if (client.getAnswer()["status"] == "NETWORK_NOTREADY") {
-				NodeInfo newNode;
-				newNode.puerto = stoi(pingingNodeAdress.substr(pingingNodeAdress.find(":") + 1));
-				newNode.ip = pingingNodeAdress.substr(0, pingingNodeAdress.find(":"));
-				pingedNodes.push_back(newNode);
-				currState = NodeState::COL_NETW_MEMBS;
-				client.clearAnswer();
-			}
-		}
-		break;
-	case NodeState::WAITING_LAYOUT_RESPONSE:
-		if (!client.getAnswer().empty()) {
-			pingedNodes.pop_back();
-			client.clearAnswer();
-			currState = NodeState::SENDING_LAYOUTS;
-		}
-		break;
-	case NodeState::SENDING_LAYOUTS:
-		if (pingedNodes.size() > 1) {
-			client.methodPost("NETWORK_LAYOUT", pingedNodes.back().ip, pingedNodes.back().puerto, layout);
-			currState = NodeState::WAITING_LAYOUT_RESPONSE;
-		}
-		else {
-			incoming_json = layout;
-			executeLayout();
-			currState = NodeState::NETW_CREATED;
-		}
-		break;
-	case NodeState::WAITING_NETW_LAYOUT:
-		break;
-	case NodeState::APPENDING:
-		if (!client.getAnswer().empty()) {
-			string dummy = client.getAnswer()["status"];
-			std::string ping_response_address = neighbour_iterator->first;
-			if (client.getAnswer()["status"] == "NETWORK_READY") {
-				//cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
-			}
-			else {
-				//cout << createAddress(ip, port) << " received OTHER response from " << ping_response_address << endl;
-				remove_address.push_back(ping_response_address);
-			}
-			neighbour_iterator++;
-			client.clearAnswer();
-			if (neighbour_iterator == connections.end()) {
-				for (string address : remove_address) {
-					deleteConnection(address);
+			break;
+		case NodeState::WAITING_PING_RESPONSE:
+			if (!client.getAnswer().empty()) {
+
+				string dummy = client.getAnswer()["status"];
+
+				if (client.getAnswer()["status"] == "NETWORK_READY") {
+					//cout << createAddress(ip, port) << " received NW READY responde from " << pingingNodeAdress << endl;
+					addConnection(pingingNodeAdress);
+					algoritmoParticular();
+					currState = NodeState::SENDING_LAYOUTS;
+					client.clearAnswer();
 				}
-				currState = NodeState::NETW_CREATED;
-				endAppend();
+				else if (client.getAnswer()["status"] == "NETWORK_NOTREADY") {
+					NodeInfo newNode;
+					newNode.puerto = stoi(pingingNodeAdress.substr(pingingNodeAdress.find(":") + 1));
+					newNode.ip = pingingNodeAdress.substr(0, pingingNodeAdress.find(":"));
+					pingedNodes.push_back(newNode);
+					currState = NodeState::COL_NETW_MEMBS;
+					client.clearAnswer();
+				}
+			}
+			break;
+		case NodeState::WAITING_LAYOUT_RESPONSE:
+			if (!client.getAnswer().empty()) {
+				pingedNodes.pop_back();
+				client.clearAnswer();
+				currState = NodeState::SENDING_LAYOUTS;
+			}
+			break;
+		case NodeState::SENDING_LAYOUTS:
+			if (pingedNodes.size() > 1) {
+				client.methodPost("NETWORK_LAYOUT", pingedNodes.back().ip, pingedNodes.back().puerto, layout);
+				currState = NodeState::WAITING_LAYOUT_RESPONSE;
 			}
 			else {
-				// PING
-				json emptyJson;
-				emptyJson.clear();
-				std::string ping_address = neighbour_iterator->first;
-				string ping_ip = get_address_ip(ping_address);
-				unsigned int ping_port = get_address_port(ping_address);
-				//cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
-				client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
+				incoming_json = layout;
+				executeLayout();
+				currState = NodeState::NETW_CREATED;
 			}
+			break;
+		case NodeState::WAITING_NETW_LAYOUT:
+			break;
+		case NodeState::APPENDING:
+			if (!client.getAnswer().empty()) {
+				string dummy = client.getAnswer()["status"];
+				std::string ping_response_address = neighbour_iterator->first;
+				if (client.getAnswer()["status"] == "NETWORK_READY") {
+					//cout << createAddress(ip, port) << " received NW READY response from " << ping_response_address << endl;
+				}
+				else {
+					//cout << createAddress(ip, port) << " received OTHER response from " << ping_response_address << endl;
+					remove_address.push_back(ping_response_address);
+				}
+				neighbour_iterator++;
+				client.clearAnswer();
+				if (neighbour_iterator == connections.end()) {
+					for (string address : remove_address) {
+						deleteConnection(address);
+					}
+					currState = NodeState::NETW_CREATED;
+					endAppend();
+				}
+				else {
+					// PING
+					json emptyJson;
+					emptyJson.clear();
+					std::string ping_address = neighbour_iterator->first;
+					string ping_ip = get_address_ip(ping_address);
+					unsigned int ping_port = get_address_port(ping_address);
+					//cout << createAddress(ip, port) << " doing ping on " << ping_address << endl;
+					client.methodPost("PING", ping_ip.c_str(), ping_port, emptyJson);
+				}
+			}
+			break;
 		}
-		break;
+
+	}
+	catch (boost::system::system_error e) {
+		std::cout << e.code() << std::endl;
 	}
 }
 
@@ -735,14 +754,15 @@ void FullNode::flood_block()
 
 		json blockJson = pendingBlockFloodRequests.front().get_block();
 
-		std::cout << "ok soy " << ip << ":" << port << " envio a: " << current_ip << ":" << current_port << endl;
-		client.methodPost("/eda_coin/eda_coin/send_block", current_ip, current_port, blockJson);
+		std::cout << "ok soy " << ip << ":" << port << " envio BLOQUE a: " << current_ip << ":" << current_port << endl;
+		blockJson.dump(2);
+		client.methodPost("send_block", current_ip, current_port, blockJson);
 		currState = NodeState::WAITING_BLKFLOOD_RESPONSE;
 
 	}
 
 	else {
-		pendingFloodRequests.pop();
+		pendingBlockFloodRequests.pop();
 		currState = NodeState::NETW_CREATED;
 	}
 }
@@ -782,7 +802,7 @@ void FullNode::pingNodes() {
 
 json FullNode::getBlockChain_FULL(void)
 {
-	return blockChain;
+	return blockchainHandler.BlockChainJSON;
 }
 
 void FullNode::executeLayout()
